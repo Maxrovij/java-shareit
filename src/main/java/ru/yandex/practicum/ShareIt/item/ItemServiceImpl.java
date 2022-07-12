@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.ShareIt.exceptions.DataNotFoundException;
 import ru.yandex.practicum.ShareIt.exceptions.IncorrectDataException;
 import ru.yandex.practicum.ShareIt.user.User;
+import ru.yandex.practicum.ShareIt.user.UserDto;
 import ru.yandex.practicum.ShareIt.user.UserService;
 
 import java.util.Collection;
@@ -25,7 +26,7 @@ public class ItemServiceImpl implements ItemService {
         this.userService = userService;
     }
 
-    public Item addNew(ItemDto itemDto, Long userId) {
+    public ItemDto addNew(ItemDto itemDto, Long userId) {
         if (userId == null)
             throw new IncorrectDataException("Missing user id!");
 
@@ -36,16 +37,16 @@ public class ItemServiceImpl implements ItemService {
         if (itemDto.getAvailable() == null)
             throw new IncorrectDataException("Missing 'Available' parameter!");
 
-        User owner = userService.getById(userId);
-        Item item = new Item(getNextId(), owner);
+        UserDto owner = userService.getById(userId);
+        Item item = new Item(getNextId(), new User(owner.getId(), owner.getName(), owner.getEmail()));
         item.setName(itemDto.getName());
         item.setDescription(itemDto.getDescription());
         item.setAvailable(itemDto.getAvailable());
 
-        return itemRepository.add(item);
+        return ItemMapper.toDto(itemRepository.add(item));
     }
 
-    public Item editItem(Long itemId, Long userId, ItemDto itemDto) {
+    public ItemDto editItem(Long itemId, Long userId, ItemDto itemDto) {
         Optional<Item> maybeItem = itemRepository.getById(itemId);
         if (maybeItem.isPresent()) {
             Item itemToUpdate = maybeItem.get();
@@ -62,31 +63,34 @@ public class ItemServiceImpl implements ItemService {
             if (itemDto.getAvailable() != null)
                 itemToUpdate.setAvailable(itemDto.getAvailable());
 
-            return itemRepository.add(itemToUpdate);
+            return ItemMapper.toDto(itemRepository.add(itemToUpdate));
         }
         throw new DataNotFoundException(String.format("Item with id %d not found!", itemId));
     }
 
-    public Item getById(Long itemId) {
-        Optional<Item> maybeItem =  itemRepository.getById(itemId);
-        if (maybeItem.isPresent()) return maybeItem.get();
+    public ItemDto getById(Long itemId) {
+        Optional<Item> maybeItem = itemRepository.getById(itemId);
+        if (maybeItem.isPresent()) return ItemMapper.toDto(maybeItem.get());
         throw new DataNotFoundException(String.format("Item with id %d not found!", itemId));
     }
 
-    public Collection<Item> getAllByOwnerId(Long ownerId) {
-        Collection<Item> allItems = itemRepository.getAll();
-        return allItems.stream().filter((item)-> item.getOwner().getId().equals(ownerId)).collect(Collectors.toList());
+    public Collection<ItemDto> getAllByOwnerId(Long ownerId) {
+        return itemRepository.getAll()
+                .stream()
+                .filter((item) -> item.getOwner().getId().equals(ownerId))
+                .map(ItemMapper::toDto)
+                .collect(Collectors.toList());
     }
 
-    public Collection<Item> searchAvailableItems(String text) {
+    public Collection<ItemDto> searchAvailableItems(String text) {
         if (text.equals("")) return List.of();
         String t = text.toLowerCase().trim();
-        Collection<Item> allItems = itemRepository.getAll();
-        return allItems
+        return itemRepository.getAll()
                 .stream()
-                .filter((item)-> item.getName().toLowerCase().contains(t)
-                                || item.getDescription().toLowerCase().contains(t)
-                                && item.isAvailable())
+                .filter((item) -> item.getName().toLowerCase().contains(t)
+                        || item.getDescription().toLowerCase().contains(t)
+                        && item.isAvailable())
+                .map(ItemMapper::toDto)
                 .collect(Collectors.toList());
     }
 

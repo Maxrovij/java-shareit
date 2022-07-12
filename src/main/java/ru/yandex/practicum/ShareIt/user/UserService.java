@@ -8,6 +8,7 @@ import ru.yandex.practicum.ShareIt.exceptions.IncorrectDataException;
 
 import java.util.Collection;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class UserService {
@@ -19,8 +20,8 @@ public class UserService {
         this.userRepository = userRepository;
     }
 
-    public User createNew(UserDto userDto) {
-        for (User u: userRepository.getAll()) {
+    public UserDto createNew(UserDto userDto) {
+        for (User u : userRepository.getAll()) {
             if (u.getEmail().equals(userDto.getEmail()))
                 throw new DataAlreadyExistsException("This email is already used!");
             if (userDto.getEmail() == null || userDto.getEmail().isEmpty())
@@ -31,10 +32,10 @@ public class UserService {
                 throw new IncorrectDataException("Invalid name");
         }
         User user = new User(getNextId(), userDto.getName(), userDto.getEmail());
-        return userRepository.add(user);
+        return UserMapper.toDto(userRepository.add(user));
     }
 
-    public User patch(UserDto userDto) {
+    public UserDto patch(UserDto userDto) {
         Optional<User> maybeUser = userRepository.getById(userDto.getId());
         if (maybeUser.isPresent()) {
             User userToEdit = maybeUser.get();
@@ -43,7 +44,7 @@ public class UserService {
             }
             if (userDto.getEmail() != null && !userDto.getEmail().isEmpty()) {
                 if (userDto.getEmail().contains("@")) {
-                    for (User us: userRepository.getAll()) {
+                    for (User us : userRepository.getAll()) {
                         if (us.getEmail().equals(userDto.getEmail()) && !us.getId().equals(userToEdit.getId())) {
                             throw new DataAlreadyExistsException("This email is already used!");
                         }
@@ -51,19 +52,19 @@ public class UserService {
                     userToEdit.setEmail(userDto.getEmail());
                 } else throw new IncorrectDataException("Invalid email!");
             }
-            return userRepository.add(userToEdit);
+            return UserMapper.toDto(userRepository.add(userToEdit));
         }
-        throw new DataNotFoundException(String.format("User with id %d not found!",userDto.getId()));
+        throw new DataNotFoundException(String.format("User with id %d not found!", userDto.getId()));
     }
 
-    public User getById(Long id) {
+    public UserDto getById(Long id) {
         Optional<User> maybeUser = userRepository.getById(id);
-        if (maybeUser.isPresent()) return maybeUser.get();
+        if (maybeUser.isPresent()) return UserMapper.toDto(maybeUser.get());
         else throw new DataNotFoundException(String.format("User with id %d not found!", id));
     }
 
-    public Collection<User> getAll() {
-        return userRepository.getAll();
+    public Collection<UserDto> getAll() {
+        return userRepository.getAll().stream().map(UserMapper::toDto).collect(Collectors.toList());
     }
 
     public void delete(Long id) {

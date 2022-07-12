@@ -20,7 +20,8 @@ public class ItemMapper {
                 i.getName(),
                 i.getDescription(),
                 i.isAvailable(),
-                new ItemDto.User(i.getOwner().getId(), i.getOwner().getName()), itemRequest
+                new ItemDto.User(i.getOwner().getId(), i.getOwner().getName()),
+                itemRequest
         );
     }
 

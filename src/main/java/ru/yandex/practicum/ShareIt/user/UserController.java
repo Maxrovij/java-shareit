@@ -16,23 +16,23 @@ public class UserController {
     }
 
     @PostMapping
-    public User createNewUser(@RequestBody UserDto userDto) {
+    public UserDto createNewUser(@RequestBody UserDto userDto) {
         return userService.createNew(userDto);
     }
 
     @PatchMapping("/{userId}")
-    public User editUser(@PathVariable Long userId, @RequestBody UserDto userDto) {
+    public UserDto editUser(@PathVariable Long userId, @RequestBody UserDto userDto) {
         userDto.setId(userId);
         return userService.patch(userDto);
     }
 
     @GetMapping("/{userId}")
-    public User getById(@PathVariable Long userId) {
+    public UserDto getById(@PathVariable Long userId) {
         return userService.getById(userId);
     }
 
     @GetMapping
-    public Collection<User> getAll() {
+    public Collection<UserDto> getAll() {
         return userService.getAll();
     }
 

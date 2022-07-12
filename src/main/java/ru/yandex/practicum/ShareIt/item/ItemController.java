@@ -16,14 +16,14 @@ public class ItemController {
     }
 
     @PostMapping
-    public Item addNew(
+    public ItemDto addNew(
             @RequestBody ItemDto itemDto,
             @RequestHeader(name = "X-Sharer-User-Id") Long userId) {
         return itemService.addNew(itemDto, userId);
     }
 
     @PatchMapping("/{itemId}")
-    public Item editItem(
+    public ItemDto editItem(
             @PathVariable Long itemId,
             @RequestHeader(name = "X-Sharer-User-Id") Long userId,
             @RequestBody ItemDto itemDto) {
@@ -31,17 +31,17 @@ public class ItemController {
     }
 
     @GetMapping("/{itemId}")
-    public Item getItemById(@PathVariable Long itemId) {
+    public ItemDto getItemById(@PathVariable Long itemId) {
         return itemService.getById(itemId);
     }
 
     @GetMapping
-    public Collection<Item> getAllByOwnerId(@RequestHeader(name = "X-Sharer-User-Id") Long ownerId) {
+    public Collection<ItemDto> getAllByOwnerId(@RequestHeader(name = "X-Sharer-User-Id") Long ownerId) {
         return itemService.getAllByOwnerId(ownerId);
     }
 
     @GetMapping("/search")
-    public Collection<Item> searchAvailableItemsByText(@RequestParam(name = "text", defaultValue = "") String text) {
+    public Collection<ItemDto> searchAvailableItemsByText(@RequestParam(name = "text", defaultValue = "") String text) {
         return itemService.searchAvailableItems(text);
     }
 
