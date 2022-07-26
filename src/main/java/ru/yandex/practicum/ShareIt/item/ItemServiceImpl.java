@@ -4,7 +4,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.ShareIt.exceptions.DataNotFoundException;
 import ru.yandex.practicum.ShareIt.exceptions.IncorrectDataException;
-import ru.yandex.practicum.ShareIt.user.User;
+import ru.yandex.practicum.ShareIt.request.ItemRequest;
+import ru.yandex.practicum.ShareIt.request.RequestRepository;
 import ru.yandex.practicum.ShareIt.user.UserDto;
 import ru.yandex.practicum.ShareIt.user.UserService;
 
@@ -17,13 +18,17 @@ import java.util.stream.Collectors;
 public class ItemServiceImpl implements ItemService {
     private final ItemRepository itemRepository;
     private final UserService userService;
+    private final RequestRepository requestRepository;
 
     private Long nextId = 0L;
 
     @Autowired
-    public ItemServiceImpl(ItemRepository itemRepository, UserService userService) {
+    public ItemServiceImpl(ItemRepository itemRepository,
+                           UserService userService,
+                           RequestRepository requestRepository) {
         this.itemRepository = itemRepository;
         this.userService = userService;
+        this.requestRepository = requestRepository;
     }
 
     public ItemDto addNew(ItemDto itemDto, Long userId) {
@@ -38,20 +43,23 @@ public class ItemServiceImpl implements ItemService {
             throw new IncorrectDataException("Missing 'Available' parameter!");
 
         UserDto owner = userService.getById(userId);
-        Item item = new Item(getNextId(), new User(owner.getId(), owner.getName(), owner.getEmail()));
-        item.setName(itemDto.getName());
-        item.setDescription(itemDto.getDescription());
-        item.setAvailable(itemDto.getAvailable());
+        Item item = new Item(
+                getNextId(),
+                itemDto.getName(),
+                itemDto.getDescription(),
+                itemDto.getAvailable(),
+                owner.getId(),
+                itemDto.getRequest() != null ? itemDto.getRequest().getId() : null);
 
-        return ItemMapper.toDto(itemRepository.add(item));
+        return toDto(itemRepository.save(item));
     }
 
     public ItemDto editItem(Long itemId, Long userId, ItemDto itemDto) {
-        Optional<Item> maybeItem = itemRepository.getById(itemId);
+        Optional<Item> maybeItem = itemRepository.findById(itemId);
         if (maybeItem.isPresent()) {
             Item itemToUpdate = maybeItem.get();
 
-            if (!itemToUpdate.getOwner().getId().equals(userId))
+            if (!itemToUpdate.getOwner().equals(userId))
                 throw new DataNotFoundException("Ur not the owner!");
 
             if (itemDto.getName() != null && !itemDto.getName().isEmpty())
@@ -63,39 +71,56 @@ public class ItemServiceImpl implements ItemService {
             if (itemDto.getAvailable() != null)
                 itemToUpdate.setAvailable(itemDto.getAvailable());
 
-            return ItemMapper.toDto(itemRepository.add(itemToUpdate));
+            return toDto(itemRepository.save(itemToUpdate));
         }
         throw new DataNotFoundException(String.format("Item with id %d not found!", itemId));
     }
 
     public ItemDto getById(Long itemId) {
-        Optional<Item> maybeItem = itemRepository.getById(itemId);
-        if (maybeItem.isPresent()) return ItemMapper.toDto(maybeItem.get());
+        Optional<Item> maybeItem = itemRepository.findById(itemId);
+        if (maybeItem.isPresent()) return toDto(maybeItem.get());
         throw new DataNotFoundException(String.format("Item with id %d not found!", itemId));
     }
 
     public Collection<ItemDto> getAllByOwnerId(Long ownerId) {
-        return itemRepository.getAll()
+        return itemRepository.searchAllByOwnerId(ownerId)
                 .stream()
-                .filter((item) -> item.getOwner().getId().equals(ownerId))
-                .map(ItemMapper::toDto)
+                .filter((item) -> item.getOwner().equals(ownerId))
+                .map(this::toDto)
                 .collect(Collectors.toList());
     }
 
     public Collection<ItemDto> searchAvailableItems(String text) {
         if (text.equals("")) return List.of();
         String t = text.toLowerCase().trim();
-        return itemRepository.getAll()
+        return itemRepository.searchByText(t)
                 .stream()
-                .filter((item) -> item.getName().toLowerCase().contains(t)
-                        || item.getDescription().toLowerCase().contains(t)
-                        && item.isAvailable())
-                .map(ItemMapper::toDto)
+                .filter(Item::isAvailable)
+                .map(this::toDto)
                 .collect(Collectors.toList());
     }
 
     private Long getNextId() {
         nextId = nextId + 1;
         return nextId;
+    }
+
+    private ItemDto toDto(Item i) {
+        ItemRequest itemRequest = null;
+        if(i.getRequest() != null) {
+            Optional<ItemRequest> maybeRequest = requestRepository.findById(i.getRequest());
+            if(maybeRequest.isPresent()) itemRequest = maybeRequest.get();
+            else throw new DataNotFoundException("Request not found!");
+        }
+
+        UserDto userDto = userService.getById(i.getOwner());
+
+        return new ItemDto(
+                i.getId(),
+                i.getName(),
+                i.getDescription(),
+                i.isAvailable(),
+                new ItemDto.User(userDto.getId(), userDto.getName()),
+                itemRequest);
     }
 }

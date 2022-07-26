@@ -2,6 +2,7 @@ package ru.yandex.practicum.ShareIt.item;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import ru.yandex.practicum.ShareIt.request.ItemRequest;
 
 @Data
 @AllArgsConstructor
@@ -17,12 +18,5 @@ public class ItemDto {
     static class User {
         private final Long id;
         private final String name;
-    }
-
-    @Data
-    static class ItemRequest {
-        private final Long id;
-        private String description;
-        private User requestor;
     }
 }

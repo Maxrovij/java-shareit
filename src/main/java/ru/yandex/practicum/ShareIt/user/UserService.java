@@ -21,7 +21,7 @@ public class UserService {
     }
 
     public UserDto createNew(UserDto userDto) {
-        for (User u : userRepository.getAll()) {
+        for (User u : userRepository.findAll()) {
             if (u.getEmail().equals(userDto.getEmail()))
                 throw new DataAlreadyExistsException("This email is already used!");
             if (userDto.getEmail() == null || userDto.getEmail().isEmpty())
@@ -32,11 +32,11 @@ public class UserService {
                 throw new IncorrectDataException("Invalid name");
         }
         User user = new User(getNextId(), userDto.getName(), userDto.getEmail());
-        return UserMapper.toDto(userRepository.add(user));
+        return UserMapper.toDto(userRepository.save(user));
     }
 
     public UserDto patch(UserDto userDto) {
-        Optional<User> maybeUser = userRepository.getById(userDto.getId());
+        Optional<User> maybeUser = userRepository.findById(userDto.getId());
         if (maybeUser.isPresent()) {
             User userToEdit = maybeUser.get();
             if (userDto.getName() != null && !userDto.getName().isEmpty()) {
@@ -44,7 +44,7 @@ public class UserService {
             }
             if (userDto.getEmail() != null && !userDto.getEmail().isEmpty()) {
                 if (userDto.getEmail().contains("@")) {
-                    for (User us : userRepository.getAll()) {
+                    for (User us : userRepository.findAll()) {
                         if (us.getEmail().equals(userDto.getEmail()) && !us.getId().equals(userToEdit.getId())) {
                             throw new DataAlreadyExistsException("This email is already used!");
                         }
@@ -52,23 +52,24 @@ public class UserService {
                     userToEdit.setEmail(userDto.getEmail());
                 } else throw new IncorrectDataException("Invalid email!");
             }
-            return UserMapper.toDto(userRepository.add(userToEdit));
+            return UserMapper.toDto(userRepository.save(userToEdit));
         }
         throw new DataNotFoundException(String.format("User with id %d not found!", userDto.getId()));
     }
 
     public UserDto getById(Long id) {
-        Optional<User> maybeUser = userRepository.getById(id);
+        Optional<User> maybeUser = userRepository.findById(id);
         if (maybeUser.isPresent()) return UserMapper.toDto(maybeUser.get());
         else throw new DataNotFoundException(String.format("User with id %d not found!", id));
     }
 
     public Collection<UserDto> getAll() {
-        return userRepository.getAll().stream().map(UserMapper::toDto).collect(Collectors.toList());
+        return userRepository.findAll().stream().map(UserMapper::toDto).collect(Collectors.toList());
     }
 
     public void delete(Long id) {
-        userRepository.delete(id);
+        Optional<User> maybeUser = userRepository.findById(id);
+        maybeUser.ifPresent(userRepository::delete);
     }
 
     private Long getNextId() {

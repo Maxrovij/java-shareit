@@ -1,11 +1,7 @@
 package ru.yandex.practicum.ShareIt.user;
 
-import java.util.Collection;
-import java.util.Optional;
+import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface UserRepository {
-    User add(User user);
-    Optional<User> getById(Long id);
-    Collection<User> getAll();
-    void delete(Long id);
+public interface UserRepository extends JpaRepository<User, Long> {
+
 }
