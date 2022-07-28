@@ -14,6 +14,7 @@ import java.util.Objects;
 @AllArgsConstructor
 public class Item {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @Column(name = "name", nullable = false, length = 250)
     private String name;
@@ -27,6 +28,15 @@ public class Item {
     private Long request;
 
     public Item(){}
+
+    public Item(String name, String description, boolean available, Long owner, Long request) {
+        this.name = name;
+        this.description = description;
+        this.available = available;
+        this.owner = owner;
+        this.request = request;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

@@ -3,10 +3,7 @@ package ru.yandex.practicum.ShareIt.user;
 import lombok.*;
 import org.hibernate.Hibernate;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
 import java.util.Objects;
 
 @Entity
@@ -17,6 +14,7 @@ import java.util.Objects;
 @AllArgsConstructor
 public class User {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @Column(name = "name", nullable = false, length = 50)
     private String name;
@@ -24,6 +22,11 @@ public class User {
     private String email;
 
     public User(){}
+
+    public User(String name, String email){
+        this.name = name;
+        this.email = email;
+    }
 
     @Override
     public boolean equals(Object o) {

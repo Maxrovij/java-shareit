@@ -2,7 +2,7 @@ package ru.yandex.practicum.ShareIt.booking;
 
 public class BookingMapper {
 
-    public static BookingDto toDto(Booking b) {
+    /*public static BookingDto toDto(Booking b) {
         return new BookingDto(
                 b.getId(),
                 b.getStart(),
@@ -11,5 +11,5 @@ public class BookingMapper {
                 new BookingDto.User(b.getBooker().getId(), b.getBooker().getName()),
                 b.getStatus()
         );
-    }
+    }*/
 }

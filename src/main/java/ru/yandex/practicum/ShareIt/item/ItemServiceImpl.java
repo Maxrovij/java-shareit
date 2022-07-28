@@ -20,8 +20,6 @@ public class ItemServiceImpl implements ItemService {
     private final UserService userService;
     private final RequestRepository requestRepository;
 
-    private Long nextId = 0L;
-
     @Autowired
     public ItemServiceImpl(ItemRepository itemRepository,
                            UserService userService,
@@ -44,7 +42,6 @@ public class ItemServiceImpl implements ItemService {
 
         UserDto owner = userService.getById(userId);
         Item item = new Item(
-                getNextId(),
                 itemDto.getName(),
                 itemDto.getDescription(),
                 itemDto.getAvailable(),
@@ -56,24 +53,24 @@ public class ItemServiceImpl implements ItemService {
 
     public ItemDto editItem(Long itemId, Long userId, ItemDto itemDto) {
         Optional<Item> maybeItem = itemRepository.findById(itemId);
-        if (maybeItem.isPresent()) {
-            Item itemToUpdate = maybeItem.get();
+        if (maybeItem.isEmpty()) throw new DataNotFoundException(String.format("Item with id %d not found!", itemId));
 
-            if (!itemToUpdate.getOwner().equals(userId))
-                throw new DataNotFoundException("Ur not the owner!");
+        Item itemToUpdate = maybeItem.get();
 
-            if (itemDto.getName() != null && !itemDto.getName().isEmpty())
-                itemToUpdate.setName(itemDto.getName());
+        if (!itemToUpdate.getOwner().equals(userId))
+            throw new DataNotFoundException("Ur not the owner!");
 
-            if (itemDto.getDescription() != null && !itemDto.getDescription().isEmpty())
-                itemToUpdate.setDescription(itemDto.getDescription());
+        if (itemDto.getName() != null && !itemDto.getName().isEmpty())
+            itemToUpdate.setName(itemDto.getName());
 
-            if (itemDto.getAvailable() != null)
-                itemToUpdate.setAvailable(itemDto.getAvailable());
+        if (itemDto.getDescription() != null && !itemDto.getDescription().isEmpty())
+            itemToUpdate.setDescription(itemDto.getDescription());
 
-            return toDto(itemRepository.save(itemToUpdate));
-        }
-        throw new DataNotFoundException(String.format("Item with id %d not found!", itemId));
+        if (itemDto.getAvailable() != null)
+            itemToUpdate.setAvailable(itemDto.getAvailable());
+
+        return toDto(itemRepository.save(itemToUpdate));
+
     }
 
     public ItemDto getById(Long itemId) {
@@ -85,7 +82,6 @@ public class ItemServiceImpl implements ItemService {
     public Collection<ItemDto> getAllByOwnerId(Long ownerId) {
         return itemRepository.searchAllByOwnerId(ownerId)
                 .stream()
-                .filter((item) -> item.getOwner().equals(ownerId))
                 .map(this::toDto)
                 .collect(Collectors.toList());
     }
@@ -98,11 +94,6 @@ public class ItemServiceImpl implements ItemService {
                 .filter(Item::isAvailable)
                 .map(this::toDto)
                 .collect(Collectors.toList());
-    }
-
-    private Long getNextId() {
-        nextId = nextId + 1;
-        return nextId;
     }
 
     private ItemDto toDto(Item i) {
