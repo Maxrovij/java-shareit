@@ -10,9 +10,9 @@ import java.util.Objects;
 @Getter
 @Setter
 @ToString
-@RequiredArgsConstructor
 @Entity
 @Table(name = "booking")
+@AllArgsConstructor
 public class Booking {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,6 +27,16 @@ public class Booking {
     private Long booker;
     @Enumerated(EnumType.STRING)
     private BookingStatus status;
+
+    public Booking() {}
+
+    public Booking(LocalDateTime start, LocalDateTime end, Long item, Long booker, BookingStatus status) {
+        this.start = start;
+        this.end = end;
+        this.item = item;
+        this.booker = booker;
+        this.status = status;
+    }
 
     @Override
     public boolean equals(Object o) {

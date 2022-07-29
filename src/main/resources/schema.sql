@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS booking
     end_date TIMESTAMP NOT NULL,
     item_id BIGINT NOT NULL,
     booker_id BIGINT NOT NULL,
-    status BOOLEAN NOT NULL,
+    status ENUM('WAITING', 'APPROVED', 'REJECTED') NOT NULL,
     CONSTRAINT item FOREIGN KEY (item_id) REFERENCES items(id),
     CONSTRAINT booker FOREIGN KEY (booker_id) REFERENCES users(id)
 );

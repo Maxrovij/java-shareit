@@ -18,4 +18,11 @@ public class BookingController {
                           @RequestHeader("X-Sharer-User-Id") Long userId) {
         return bookingService.add(bookingRequestDto, userId);
     }
+
+    @PatchMapping("/{bookingId}")
+    public BookingDto setAvailable(@RequestParam boolean approved,
+                                   @RequestHeader("X-Sharer-User-Id") Long userId,
+                                   @PathVariable Long bookingId) {
+        return bookingService.setAvailable(userId, bookingId, approved);
+    }
 }

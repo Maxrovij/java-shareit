@@ -15,7 +15,7 @@ public class ItemDto {
     private ItemRequest request;
 
     @Data
-    static class User {
+    public static class User {
         private final Long id;
         private final String name;
     }

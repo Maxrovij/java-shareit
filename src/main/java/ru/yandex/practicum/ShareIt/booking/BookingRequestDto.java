@@ -1,7 +1,9 @@
 package ru.yandex.practicum.ShareIt.booking;
 
-import java.time.LocalDateTime;
+import lombok.Data;
 
+import java.time.LocalDateTime;
+@Data
 public class BookingRequestDto {
     private Long id;
     private LocalDateTime start;
