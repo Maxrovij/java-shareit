@@ -11,7 +11,14 @@ import ru.yandex.practicum.ShareIt.user.UserService;
 
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+
+/*TODO
+* Возможно стоит пересмотреть конвертацию в BookingDto. Как вариант - передавать в метод ItemDto */
 
 @Service
 public class BookingServiceImpl implements BookingService {
@@ -56,6 +63,36 @@ public class BookingServiceImpl implements BookingService {
         Booking booking = b.get();
         booking.setStatus(available ? BookingStatus.APPROVED : BookingStatus.REJECTED);
         return toDto(bookingRepository.save(booking));
+    }
+
+    public BookingDto get(Long userId, Long bookingId) {
+        Optional<Booking> b = bookingRepository.findById(bookingId);
+        if (b.isEmpty()) throw new DataNotFoundException("Booking not found!");
+
+        Booking booking = b.get();
+        ItemDto itemDto = itemService.getById(booking.getItem());
+
+        if (userId.equals(booking.getBooker()) || userId.equals(itemDto.getOwner().getId())) {
+            return toDto(booking);
+        } else throw new IncorrectDataException("You must be booker or owner!");
+    }
+
+    @Override
+    public Collection<BookingDto> getAllForUser(Long userId, States state) {
+        List<Booking> bookings = bookingRepository.findByBooker_id(userId);
+        switch (state) {
+            case REJECTED:
+
+            default:
+                return bookings.stream()
+                        .sorted((booking1, booking2) -> {
+                            if (booking1.getStart().isBefore(booking2.getStart())) return 1;
+                            if (booking1.getStart().isAfter(booking2.getStart())) return -1;
+                            return 0;
+                        }).map(this::toDto).collect(Collectors.toList());
+        }
+
+
     }
 
 
