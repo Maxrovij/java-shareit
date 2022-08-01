@@ -10,15 +10,12 @@ import ru.yandex.practicum.ShareIt.user.UserDto;
 import ru.yandex.practicum.ShareIt.user.UserService;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
-/*TODO
-* Возможно стоит пересмотреть конвертацию в BookingDto. Как вариант - передавать в метод ItemDto */
 
 @Service
 public class BookingServiceImpl implements BookingService {
@@ -42,7 +39,7 @@ public class BookingServiceImpl implements BookingService {
         Instant now = Instant.now();
         Instant startOfBookingRequest = bookingRequestDto.getStart().toInstant(ZoneOffset.UTC);
         Instant endOfBookingRequest = bookingRequestDto.getEnd().toInstant(ZoneOffset.UTC);
-        if(endOfBookingRequest.isBefore(now) ||
+        if (endOfBookingRequest.isBefore(now) ||
                 endOfBookingRequest.isBefore(startOfBookingRequest) ||
                 startOfBookingRequest.isBefore(now)) throw new IncorrectDataException("Incorrect booking dates!");
 
@@ -55,10 +52,10 @@ public class BookingServiceImpl implements BookingService {
 
     public BookingDto setAvailable(Long userId, Long bookingId, boolean available) {
         Optional<Booking> b = bookingRepository.findById(bookingId);
-        if(b.isEmpty()) throw new DataNotFoundException("Booking not found!");
+        if (b.isEmpty()) throw new DataNotFoundException("Booking not found!");
 
         ItemDto itemDto = itemService.getById(b.get().getItem());
-        if(!itemDto.getOwner().getId().equals(userId)) throw new IncorrectDataException("Ur not the owner!");
+        if (!itemDto.getOwner().getId().equals(userId)) throw new IncorrectDataException("Ur not the owner!");
 
         Booking booking = b.get();
         booking.setStatus(available ? BookingStatus.APPROVED : BookingStatus.REJECTED);
@@ -79,22 +76,43 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public Collection<BookingDto> getAllForUser(Long userId, States state) {
-        List<Booking> bookings = bookingRepository.findByBooker_id(userId);
+        List<Booking> bookings;
+        LocalDateTime now = LocalDateTime.now();
         switch (state) {
+            case ALL:
+                bookings = bookingRepository.findAllByBookerId(userId);
+                return toCollectionDto(bookings);
             case REJECTED:
-
+                bookings = bookingRepository.findAllByBooker_idAndStatus(userId, States.REJECTED);
+                return toCollectionDto(bookings);
+            case WAITING:
+                bookings = bookingRepository.findAllByBooker_idAndStatus(userId, States.WAITING);
+                return toCollectionDto(bookings);
+            case CURRENT:
+                bookings = bookingRepository.findAllCurrent(userId, now);
+                return toCollectionDto(bookings);
+            case PAST:
+                bookings = bookingRepository.findAllPast(userId, now);
+                return toCollectionDto(bookings);
+            case FUTURE:
+                bookings = bookingRepository.findAllFuture(userId, now);
+                return toCollectionDto(bookings);
             default:
-                return bookings.stream()
-                        .sorted((booking1, booking2) -> {
-                            if (booking1.getStart().isBefore(booking2.getStart())) return 1;
-                            if (booking1.getStart().isAfter(booking2.getStart())) return -1;
-                            return 0;
-                        }).map(this::toDto).collect(Collectors.toList());
+                throw new IncorrectDataException(String.format("State '%s' is not supported.", state));
         }
 
 
     }
 
+    private Collection<BookingDto> toCollectionDto(List<Booking> bookings) {
+        return bookings.stream()
+                .map(this::toDto)
+                .sorted((booking1, booking2) -> {
+                    if (booking1.getStart().isBefore(booking2.getStart())) return 1;
+                    if (booking1.getStart().isAfter(booking2.getStart())) return -1;
+                    return 0;
+                }).collect(Collectors.toList());
+    }
 
     private BookingDto toDto(Booking b) {
         ItemDto itemDto = itemService.getById(b.getItem());
