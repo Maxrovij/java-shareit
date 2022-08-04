@@ -2,6 +2,8 @@ package ru.yandex.practicum.ShareIt.item;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.ShareIt.booking.Booking;
+import ru.yandex.practicum.ShareIt.booking.BookingRepository;
 import ru.yandex.practicum.ShareIt.exceptions.DataNotFoundException;
 import ru.yandex.practicum.ShareIt.exceptions.IncorrectDataException;
 import ru.yandex.practicum.ShareIt.request.ItemRequest;
@@ -9,6 +11,7 @@ import ru.yandex.practicum.ShareIt.request.RequestRepository;
 import ru.yandex.practicum.ShareIt.user.UserDto;
 import ru.yandex.practicum.ShareIt.user.UserService;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -19,14 +22,17 @@ public class ItemServiceImpl implements ItemService {
     private final ItemRepository itemRepository;
     private final UserService userService;
     private final RequestRepository requestRepository;
+    private final BookingRepository bookingRepository;
 
     @Autowired
     public ItemServiceImpl(ItemRepository itemRepository,
                            UserService userService,
-                           RequestRepository requestRepository) {
+                           RequestRepository requestRepository,
+                           BookingRepository bookingRepository) {
         this.itemRepository = itemRepository;
         this.userService = userService;
         this.requestRepository = requestRepository;
+        this.bookingRepository = bookingRepository;
     }
 
     public ItemDto addNew(ItemDto itemDto, Long userId) {
@@ -73,16 +79,23 @@ public class ItemServiceImpl implements ItemService {
 
     }
 
-    public ItemDto getById(Long itemId) {
+    public ItemDto getById(Long itemId, Long userId) {
         Optional<Item> maybeItem = itemRepository.findById(itemId);
-        if (maybeItem.isPresent()) return toDto(maybeItem.get());
-        throw new DataNotFoundException(String.format("Item with id %d not found!", itemId));
+        if (maybeItem.isEmpty()) throw new DataNotFoundException(String.format("Item with id %d not found!", itemId));
+        ItemDto itemDto = toDto(maybeItem.get());
+
+        if (itemDto.getOwner().getId().equals(userId)) {
+            return setBookings(itemDto);
+        }
+
+        return itemDto;
     }
 
     public Collection<ItemDto> getAllByOwnerId(Long ownerId) {
         return itemRepository.searchAllByOwnerId(ownerId)
                 .stream()
                 .map(this::toDto)
+                .map(this::setBookings)
                 .collect(Collectors.toList());
     }
 
@@ -98,9 +111,9 @@ public class ItemServiceImpl implements ItemService {
 
     private ItemDto toDto(Item i) {
         ItemRequest itemRequest = null;
-        if(i.getRequest() != null) {
+        if (i.getRequest() != null) {
             Optional<ItemRequest> maybeRequest = requestRepository.findById(i.getRequest());
-            if(maybeRequest.isPresent()) itemRequest = maybeRequest.get();
+            if (maybeRequest.isPresent()) itemRequest = maybeRequest.get();
             else throw new DataNotFoundException("Request not found!");
         }
 
@@ -112,6 +125,24 @@ public class ItemServiceImpl implements ItemService {
                 i.getDescription(),
                 i.isAvailable(),
                 new ItemDto.User(userDto.getId(), userDto.getName()),
-                itemRequest);
+                itemRequest,
+                null,
+                null);
+    }
+
+    private ItemDto setBookings(ItemDto itemDto) {
+        List<Booking> allForItem = bookingRepository.findAllByItem_Id(itemDto.getId());
+        LocalDateTime now = LocalDateTime.now();
+        if (!allForItem.isEmpty()) {
+            Booking last = allForItem.get(0);
+            Booking next = allForItem.get(allForItem.size() - 1);
+            for (Booking b : allForItem) {
+                if (b.getEnd().isBefore(now) && b.getEnd().isAfter(last.getEnd())) last = b;
+                if (b.getStart().isAfter(now) && b.getStart().isBefore(next.getStart())) next = b;
+            }
+            itemDto.setLastBooking(last);
+            itemDto.setNextBooking(next);
+        }
+        return itemDto;
     }
 }

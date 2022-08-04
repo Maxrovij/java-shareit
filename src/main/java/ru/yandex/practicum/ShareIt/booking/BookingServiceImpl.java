@@ -32,7 +32,10 @@ public class BookingServiceImpl implements BookingService {
 
     public BookingDto add(BookingRequestDto bookingRequestDto, Long userId) {
         userService.getById(userId);
-        ItemDto iDto = itemService.getById(bookingRequestDto.getItemId());
+        ItemDto iDto = itemService.getById(bookingRequestDto.getItemId(), null);
+
+        if (iDto.getOwner().getId().equals(userId))
+            throw new DataNotFoundException("Just set 'Available' to FALSE you stupid!");
 
         if (!iDto.getAvailable()) throw new IncorrectDataException("Item is not available!");
 
@@ -50,14 +53,18 @@ public class BookingServiceImpl implements BookingService {
         return toDto(bookingRepository.save(booking));
     }
 
-    public BookingDto setAvailable(Long userId, Long bookingId, boolean available) {
+    public BookingDto setAvailable(Long userId, Long bookingId, Boolean available) {
+
         Optional<Booking> b = bookingRepository.findById(bookingId);
         if (b.isEmpty()) throw new DataNotFoundException("Booking not found!");
+        Booking booking = b.get();
+        if (booking.getBookerId().equals(userId)) throw new DataNotFoundException("Status can be changed only by owner!");
+        if (booking.getStatus().equals(BookingStatus.APPROVED) && available)
+            throw new IncorrectDataException("Status is already defined as 'APPROVED'");
 
-        ItemDto itemDto = itemService.getById(b.get().getItem());
+        ItemDto itemDto = itemService.getById(booking.getItem(), null);
         if (!itemDto.getOwner().getId().equals(userId)) throw new IncorrectDataException("Ur not the owner!");
 
-        Booking booking = b.get();
         booking.setStatus(available ? BookingStatus.APPROVED : BookingStatus.REJECTED);
         return toDto(bookingRepository.save(booking));
     }
@@ -67,44 +74,107 @@ public class BookingServiceImpl implements BookingService {
         if (b.isEmpty()) throw new DataNotFoundException("Booking not found!");
 
         Booking booking = b.get();
-        ItemDto itemDto = itemService.getById(booking.getItem());
+        ItemDto itemDto = itemService.getById(booking.getItem(), null);
 
-        if (userId.equals(booking.getBooker()) || userId.equals(itemDto.getOwner().getId())) {
+        if (userId.equals(booking.getBookerId()) || userId.equals(itemDto.getOwner().getId())) {
             return toDto(booking);
-        } else throw new IncorrectDataException("You must be booker or owner!");
+        } else throw new DataNotFoundException("You must be booker or owner!");
     }
 
     @Override
-    public Collection<BookingDto> getAllForUser(Long userId, States state) {
+    public Collection<BookingDto> getAllForUser(Long userId, String state) {
+        States s;
+        try {
+            s = States.valueOf(States.class, state);
+        } catch (IllegalArgumentException e) {
+            throw new IncorrectDataException(String.format("Unknown state: %s", state));
+        }
+
+        userService.getById(userId);
         List<Booking> bookings;
         LocalDateTime now = LocalDateTime.now();
-        switch (state) {
+
+        switch (s) {
             case ALL:
                 bookings = bookingRepository.findAllByBookerId(userId);
                 return toCollectionDto(bookings);
             case REJECTED:
-                bookings = bookingRepository.findAllByBooker_idAndStatus(userId, States.REJECTED);
+                bookings = bookingRepository.findAllByBooker_idAndStatus(userId, String.valueOf(BookingStatus.REJECTED));
                 return toCollectionDto(bookings);
             case WAITING:
-                bookings = bookingRepository.findAllByBooker_idAndStatus(userId, States.WAITING);
+                bookings = bookingRepository.findAllByBooker_idAndStatus(userId, String.valueOf(BookingStatus.WAITING));
                 return toCollectionDto(bookings);
             case CURRENT:
-                bookings = bookingRepository.findAllCurrent(userId, now);
-                return toCollectionDto(bookings);
+                bookings = bookingRepository.findAllByBooker_idAndStatus(userId, String.valueOf(BookingStatus.APPROVED));
+                return toCollectionDto(bookings
+                        .stream()
+                        .filter(booking -> booking.getStart().isBefore(now) && booking.getEnd().isAfter(now))
+                        .collect(Collectors.toList()));
             case PAST:
-                bookings = bookingRepository.findAllPast(userId, now);
-                return toCollectionDto(bookings);
+                bookings = bookingRepository.findAllByBookerId(userId);
+                return toCollectionDto(bookings
+                        .stream()
+                        .filter(booking -> booking.getEnd().isBefore(now))
+                        .collect(Collectors.toList()));
             case FUTURE:
-                bookings = bookingRepository.findAllFuture(userId, now);
-                return toCollectionDto(bookings);
+                bookings = bookingRepository.findAllByBookerId(userId);
+                return toCollectionDto(bookings
+                        .stream()
+                        .filter(booking -> booking.getStart().isAfter(now))
+                        .collect(Collectors.toList()));
             default:
-                throw new IncorrectDataException(String.format("State '%s' is not supported.", state));
+                return List.of();
+        }
+    }
+
+    @Override
+    public Collection<BookingDto> getAllForOwner(Long userId, String state) {
+        States s;
+        try {
+            s = States.valueOf(States.class, state);
+        } catch (IllegalArgumentException e) {
+            throw new IncorrectDataException(String.format("Unknown state: %s", state));
         }
 
+        Collection<ItemDto> allItems = itemService.getAllByOwnerId(userId);
+        if (allItems.size() == 0) throw new DataNotFoundException("You don't have any items!");
 
+        LocalDateTime now = LocalDateTime.now();
+        List<Booking> allByOwner = bookingRepository.findAllByOwner(userId);
+
+        switch (s) {
+            case ALL:
+                return toCollectionDto(allByOwner);
+            case REJECTED:
+                return toCollectionDto(allByOwner.stream()
+                        .filter(booking -> booking.getStatus().equals(BookingStatus.REJECTED))
+                        .collect(Collectors.toList()));
+            case WAITING:
+
+                return toCollectionDto(allByOwner.stream()
+                        .filter(booking -> booking.getStatus().equals(BookingStatus.WAITING))
+                        .collect(Collectors.toList()));
+            case CURRENT:
+                return toCollectionDto(allByOwner.stream()
+                        .filter(booking -> booking.getStart().isBefore(now) &&
+                                booking.getEnd().isAfter(now) &&
+                                booking.getStatus().equals(BookingStatus.APPROVED))
+                        .collect(Collectors.toList()));
+            case PAST:
+                return toCollectionDto(allByOwner.stream()
+                        .filter(booking -> booking.getEnd().isBefore(now))
+                        .collect(Collectors.toList()));
+            case FUTURE:
+                return toCollectionDto(allByOwner.stream()
+                        .filter(booking -> booking.getStart().isAfter(now))
+                        .collect(Collectors.toList()));
+            default:
+                return List.of();
+        }
     }
 
     private Collection<BookingDto> toCollectionDto(List<Booking> bookings) {
+        if (bookings.isEmpty()) throw new DataNotFoundException("Bookings is empty!");
         return bookings.stream()
                 .map(this::toDto)
                 .sorted((booking1, booking2) -> {
@@ -115,8 +185,8 @@ public class BookingServiceImpl implements BookingService {
     }
 
     private BookingDto toDto(Booking b) {
-        ItemDto itemDto = itemService.getById(b.getItem());
-        UserDto userDto = userService.getById(b.getBooker());
+        ItemDto itemDto = itemService.getById(b.getItem(), null);
+        UserDto userDto = userService.getById(b.getBookerId());
         return new BookingDto(
                 b.getId(),
                 b.getStart(),

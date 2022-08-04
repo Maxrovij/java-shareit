@@ -24,17 +24,18 @@ public class Booking {
     @Column(name = "item_id", nullable = false)
     private Long item;
     @Column(name = "booker_id", nullable = false)
-    private Long booker;
+    private Long bookerId;
     @Enumerated(EnumType.STRING)
     private BookingStatus status;
 
-    public Booking() {}
+    public Booking() {
+    }
 
     public Booking(LocalDateTime start, LocalDateTime end, Long item, Long booker, BookingStatus status) {
         this.start = start;
         this.end = end;
         this.item = item;
-        this.booker = booker;
+        this.bookerId = booker;
         this.status = status;
     }
 
