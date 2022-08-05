@@ -87,7 +87,7 @@ public class BookingServiceImpl implements BookingService {
         try {
             s = States.valueOf(States.class, state);
         } catch (IllegalArgumentException e) {
-            throw new IncorrectDataException(String.format("Unknown state: %s", state));
+            throw new IncorrectDataException(String.format("{\"error\": \"Unknown state: %s\" }", state));
         }
 
         userService.getById(userId);
@@ -133,7 +133,7 @@ public class BookingServiceImpl implements BookingService {
         try {
             s = States.valueOf(States.class, state);
         } catch (IllegalArgumentException e) {
-            throw new IncorrectDataException(String.format("Unknown state: %s", state));
+            throw new IncorrectDataException(String.format("{\"error\": \"Unknown state: %s\" }", state));
         }
 
         Collection<ItemDto> allItems = itemService.getAllByOwnerId(userId);
