@@ -12,4 +12,6 @@ public interface ItemService {
     Collection<ItemDto> getAllByOwnerId(Long ownerId);
 
     Collection<ItemDto> searchAvailableItems(String text);
+
+    CommentDto addComment(Long itemId, Long userId, CommentDto commentDto);
 }

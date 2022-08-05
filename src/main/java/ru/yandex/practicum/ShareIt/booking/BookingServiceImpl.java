@@ -105,7 +105,7 @@ public class BookingServiceImpl implements BookingService {
                 bookings = bookingRepository.findAllByBooker_idAndStatus(userId, String.valueOf(BookingStatus.WAITING));
                 return toCollectionDto(bookings);
             case CURRENT:
-                bookings = bookingRepository.findAllByBooker_idAndStatus(userId, String.valueOf(BookingStatus.APPROVED));
+                bookings = bookingRepository.findAllByBookerId(userId);
                 return toCollectionDto(bookings
                         .stream()
                         .filter(booking -> booking.getStart().isBefore(now) && booking.getEnd().isAfter(now))
@@ -157,8 +157,7 @@ public class BookingServiceImpl implements BookingService {
             case CURRENT:
                 return toCollectionDto(allByOwner.stream()
                         .filter(booking -> booking.getStart().isBefore(now) &&
-                                booking.getEnd().isAfter(now) &&
-                                booking.getStatus().equals(BookingStatus.APPROVED))
+                                booking.getEnd().isAfter(now))
                         .collect(Collectors.toList()));
             case PAST:
                 return toCollectionDto(allByOwner.stream()

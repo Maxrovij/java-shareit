@@ -5,6 +5,8 @@ import lombok.Data;
 import ru.yandex.practicum.ShareIt.booking.Booking;
 import ru.yandex.practicum.ShareIt.request.ItemRequest;
 
+import java.util.List;
+
 @Data
 @AllArgsConstructor
 public class ItemDto {
@@ -16,6 +18,7 @@ public class ItemDto {
     private ItemRequest request;
     private Booking lastBooking;
     private Booking nextBooking;
+    private List<CommentDto> comments;
 
     @Data
     public static class User {

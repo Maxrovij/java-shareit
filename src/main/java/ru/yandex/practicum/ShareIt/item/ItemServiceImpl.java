@@ -24,15 +24,19 @@ public class ItemServiceImpl implements ItemService {
     private final RequestRepository requestRepository;
     private final BookingRepository bookingRepository;
 
+    private final CommentRepository commentRepository;
+
     @Autowired
     public ItemServiceImpl(ItemRepository itemRepository,
                            UserService userService,
                            RequestRepository requestRepository,
-                           BookingRepository bookingRepository) {
+                           BookingRepository bookingRepository,
+                           CommentRepository commentRepository) {
         this.itemRepository = itemRepository;
         this.userService = userService;
         this.requestRepository = requestRepository;
         this.bookingRepository = bookingRepository;
+        this.commentRepository = commentRepository;
     }
 
     public ItemDto addNew(ItemDto itemDto, Long userId) {
@@ -109,6 +113,29 @@ public class ItemServiceImpl implements ItemService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public CommentDto addComment(Long itemId, Long userId, CommentDto commentDto) {
+
+        if (itemRepository.findById(itemId).isEmpty()) throw new DataNotFoundException("Item not found!");
+
+        if(commentDto.getText().isEmpty()) throw new IncorrectDataException("Write something!");
+
+        List<Booking> itemBookings = bookingRepository.findAllByItem_Id(itemId);
+        if (itemBookings.size() == 0) throw new DataNotFoundException("Item have never been booked!");
+
+        LocalDateTime now = LocalDateTime.now();
+        if (validateItemBooking(itemBookings, userId, now)) {
+            Comment comment = commentRepository.save(new Comment(
+                    null,
+                    commentDto.getText(),
+                    itemId,
+                    userId,
+                    now));
+            return commentToDto(comment);
+        }
+        throw new IncorrectDataException("Not valid comment");
+    }
+
     private ItemDto toDto(Item i) {
         ItemRequest itemRequest = null;
         if (i.getRequest() != null) {
@@ -119,6 +146,8 @@ public class ItemServiceImpl implements ItemService {
 
         UserDto userDto = userService.getById(i.getOwner());
 
+        List<Comment> comments = commentRepository.findAllByItemId(i.getId());
+
         return new ItemDto(
                 i.getId(),
                 i.getName(),
@@ -127,7 +156,10 @@ public class ItemServiceImpl implements ItemService {
                 new ItemDto.User(userDto.getId(), userDto.getName()),
                 itemRequest,
                 null,
-                null);
+                null,
+                comments.size() == 0 ? List.of() : comments.stream()
+                        .map(this::commentToDto)
+                        .collect(Collectors.toList()));
     }
 
     private ItemDto setBookings(ItemDto itemDto) {
@@ -144,5 +176,24 @@ public class ItemServiceImpl implements ItemService {
             itemDto.setNextBooking(next);
         }
         return itemDto;
+    }
+
+    private boolean validateItemBooking(List<Booking> bookings, Long userId, LocalDateTime now) {
+        boolean valid = false;
+        for (Booking b : bookings) {
+            if (b.getBookerId().equals(userId) && b.getEnd().isBefore(now)) valid = true;
+        }
+        return valid;
+    }
+
+    private CommentDto commentToDto(Comment comment) {
+        UserDto userDto = userService.getById(comment.getAuthor());
+        return new CommentDto(
+                comment.getId(),
+                comment.getText(),
+                comment.getItem(),
+                comment.getAuthor(),
+                userDto.getName(),
+                comment.getCreated());
     }
 }
