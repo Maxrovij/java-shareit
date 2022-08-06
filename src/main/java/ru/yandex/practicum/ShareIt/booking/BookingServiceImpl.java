@@ -1,5 +1,7 @@
 package ru.yandex.practicum.ShareIt.booking;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.ShareIt.exceptions.DataNotFoundException;
@@ -9,9 +11,7 @@ import ru.yandex.practicum.ShareIt.item.ItemService;
 import ru.yandex.practicum.ShareIt.user.UserDto;
 import ru.yandex.practicum.ShareIt.user.UserService;
 
-import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -22,6 +22,8 @@ public class BookingServiceImpl implements BookingService {
     private final BookingRepository bookingRepository;
     private final ItemService itemService;
     private final UserService userService;
+
+    private static final Logger log = LoggerFactory.getLogger(BookingServiceImpl.class);
 
     @Autowired
     public BookingServiceImpl(BookingRepository bookingRepository, ItemService itemService, UserService userService) {
@@ -39,9 +41,11 @@ public class BookingServiceImpl implements BookingService {
 
         if (!iDto.getAvailable()) throw new IncorrectDataException("Item is not available!");
 
-        Instant now = Instant.now();
-        Instant startOfBookingRequest = bookingRequestDto.getStart().toInstant(ZoneOffset.UTC);
-        Instant endOfBookingRequest = bookingRequestDto.getEnd().toInstant(ZoneOffset.UTC);
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime startOfBookingRequest = bookingRequestDto.getStart();
+        LocalDateTime endOfBookingRequest = bookingRequestDto.getEnd();
+        log.info("now: {}, requestStart: {}, requestEnd: {}", now, startOfBookingRequest, endOfBookingRequest);
+
         if (endOfBookingRequest.isBefore(now) ||
                 endOfBookingRequest.isBefore(startOfBookingRequest) ||
                 startOfBookingRequest.isBefore(now)) throw new IncorrectDataException("Incorrect booking dates!");
@@ -58,7 +62,8 @@ public class BookingServiceImpl implements BookingService {
         Optional<Booking> b = bookingRepository.findById(bookingId);
         if (b.isEmpty()) throw new DataNotFoundException("Booking not found!");
         Booking booking = b.get();
-        if (booking.getBookerId().equals(userId)) throw new DataNotFoundException("Status can be changed only by owner!");
+        if (booking.getBookerId().equals(userId))
+            throw new DataNotFoundException("Status can be changed only by owner!");
         if (booking.getStatus().equals(BookingStatus.APPROVED) && available)
             throw new IncorrectDataException("Status is already defined as 'APPROVED'");
 
@@ -106,6 +111,7 @@ public class BookingServiceImpl implements BookingService {
                 return toCollectionDto(bookings);
             case CURRENT:
                 bookings = bookingRepository.findAllByBookerId(userId);
+                log.info("getAllForUser(), 'CURRENT' state. now = {}", now);
                 return toCollectionDto(bookings
                         .stream()
                         .filter(booking -> booking.getStart().isBefore(now) && booking.getEnd().isAfter(now))
@@ -155,6 +161,7 @@ public class BookingServiceImpl implements BookingService {
                         .filter(booking -> booking.getStatus().equals(BookingStatus.WAITING))
                         .collect(Collectors.toList()));
             case CURRENT:
+                log.info("getAllForOwner(), 'CURRENT' state. now = {}", now);
                 return toCollectionDto(allByOwner.stream()
                         .filter(booking -> booking.getStart().isBefore(now) &&
                                 booking.getEnd().isAfter(now))

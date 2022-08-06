@@ -1,5 +1,7 @@
 package ru.yandex.practicum.ShareIt.item;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.ShareIt.booking.Booking;
@@ -23,8 +25,9 @@ public class ItemServiceImpl implements ItemService {
     private final UserService userService;
     private final RequestRepository requestRepository;
     private final BookingRepository bookingRepository;
-
     private final CommentRepository commentRepository;
+
+    private static final Logger log = LoggerFactory.getLogger(ItemServiceImpl.class);
 
     @Autowired
     public ItemServiceImpl(ItemRepository itemRepository,
@@ -118,7 +121,7 @@ public class ItemServiceImpl implements ItemService {
 
         if (itemRepository.findById(itemId).isEmpty()) throw new DataNotFoundException("Item not found!");
 
-        if(commentDto.getText().isEmpty()) throw new IncorrectDataException("Write something!");
+        if (commentDto.getText().isEmpty()) throw new IncorrectDataException("Write something!");
 
         List<Booking> itemBookings = bookingRepository.findAllByItem_Id(itemId);
         if (itemBookings.size() == 0) throw new DataNotFoundException("Item have never been booked!");
@@ -172,6 +175,8 @@ public class ItemServiceImpl implements ItemService {
                 if (b.getEnd().isBefore(now) && b.getEnd().isAfter(last.getEnd())) last = b;
                 if (b.getStart().isAfter(now) && b.getStart().isBefore(next.getStart())) next = b;
             }
+            log.info("setBookings(). now: {}, lastBooking.end: {}, nextBooking.start: {}",
+                    now, last.getEnd(), next.getStart());
             itemDto.setLastBooking(last);
             itemDto.setNextBooking(next);
         }
