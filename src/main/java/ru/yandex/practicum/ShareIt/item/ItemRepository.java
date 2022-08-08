@@ -1,12 +1,18 @@
 package ru.yandex.practicum.ShareIt.item;
 
-import java.util.Collection;
-import java.util.Optional;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
-public interface ItemRepository {
-    Item add(Item item);
+import java.util.List;
 
-    Optional<Item> getById(Long itemId);
+public interface ItemRepository extends JpaRepository<Item, Long> {
 
-    Collection<Item> getAll();
+    @Query(" select i from Item as i " +
+            "where lower(i.name) like (concat('%', ?1, '%')) " +
+            " or lower(i.description) like (concat('%', ?1, '%'))")
+    List<Item> searchByText(String text);
+
+    @Query("select i from Item as i where i.owner=?1")
+    List<Item> searchAllByOwnerId(Long id);
+
 }

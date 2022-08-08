@@ -2,6 +2,10 @@ package ru.yandex.practicum.ShareIt.item;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import ru.yandex.practicum.ShareIt.booking.Booking;
+import ru.yandex.practicum.ShareIt.request.ItemRequest;
+
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -12,17 +16,13 @@ public class ItemDto {
     private Boolean available;
     private User owner;
     private ItemRequest request;
+    private Booking lastBooking;
+    private Booking nextBooking;
+    private List<CommentDto> comments;
 
     @Data
-    static class User {
+    public static class User {
         private final Long id;
         private final String name;
-    }
-
-    @Data
-    static class ItemRequest {
-        private final Long id;
-        private String description;
-        private User requestor;
     }
 }
