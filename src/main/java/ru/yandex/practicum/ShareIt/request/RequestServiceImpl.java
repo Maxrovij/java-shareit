@@ -21,7 +21,6 @@ public class RequestServiceImpl implements RequestService {
 
     private final RequestRepository requestRepository;
     private final UserService userService;
-
     private final ItemService itemService;
 
     @Autowired
@@ -61,8 +60,18 @@ public class RequestServiceImpl implements RequestService {
     }
 
     @Override
-    public Collection<ItemRequestDto> getAllWithPagination(Long userId, Long from, int size) {
-        return null;
+    public Collection<ItemRequestDto> getAllWithPagination(Long userId, Long from, Integer size) {
+        userService.getById(userId);
+        if (from < 0 || size <= 0) throw new IncorrectDataException("Incorrect params!");
+
+        List<ItemRequest> requestsByParams = requestRepository.findAllByParams(userId, size, from);
+        return requestsByParams
+                .stream()
+                .map(itemRequest -> {
+                    UserDto requestor = userService.getById(itemRequest.getRequestor());
+                    return setResponses(toDto(itemRequest, requestor));
+                })
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -71,11 +80,12 @@ public class RequestServiceImpl implements RequestService {
         Optional<ItemRequest> maybeRequest = requestRepository.findById(requestId);
         if (maybeRequest.isEmpty()) throw new DataNotFoundException("Request not found!");
 
-        ItemRequestDto dto = toDto(maybeRequest.get(), userDto);
-        Collection<ItemDto> responses = itemService.getAllByRequestId(requestId);
+        return setResponses(toDto(maybeRequest.get(), userDto));
+    }
 
+    private ItemRequestDto setResponses(ItemRequestDto dto) {
+        Collection<ItemDto> responses = itemService.getAllByRequestId(dto.getId());
         if (!responses.isEmpty()) dto.setItems(responses);
-
         return dto;
     }
 

@@ -7,7 +7,7 @@ public interface RequestService {
 
     Collection<ItemRequestDto> getAllForUser(Long userId);
 
-    Collection<ItemRequestDto> getAllWithPagination(Long userId, Long from, int size);
+    Collection<ItemRequestDto> getAllWithPagination(Long userId, Long from, Integer size);
 
     ItemRequestDto getById(Long userId, Long requestId);
 }

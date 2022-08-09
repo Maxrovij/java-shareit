@@ -28,9 +28,10 @@ public class RequestController {
     }
 
     @GetMapping("/all")
-    public Collection<ItemRequestDto> getAllWithPagination(@RequestHeader("X-Sharer-User-Id") Long userId,
-                                                           @RequestParam(name = "from", defaultValue = "0") Long from,
-                                                           @RequestParam(name = "size", defaultValue = "10") int size) {
+    public Collection<ItemRequestDto> getAllWithPagination(
+            @RequestHeader("X-Sharer-User-Id") Long userId,
+            @RequestParam(name = "from", defaultValue = "0") Long from,
+            @RequestParam(name = "size", defaultValue = "10") Integer size) {
         return requestService.getAllWithPagination(userId, from, size);
     }
 
