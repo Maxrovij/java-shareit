@@ -12,9 +12,10 @@ import java.util.Objects;
 @Getter
 @Setter
 @ToString
-@RequiredArgsConstructor
+@AllArgsConstructor
 public class ItemRequest {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @Column(name = "description", nullable = false)
     private String description;
@@ -22,6 +23,10 @@ public class ItemRequest {
     private Long requestor;
     @Column(name = "creation_date")
     private LocalDateTime created;
+
+    public ItemRequest() {
+
+    }
 
     @Override
     public boolean equals(Object o) {

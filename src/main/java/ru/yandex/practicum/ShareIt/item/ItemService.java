@@ -1,6 +1,7 @@
 package ru.yandex.practicum.ShareIt.item;
 
 import java.util.Collection;
+import java.util.List;
 
 public interface ItemService {
     ItemDto addNew(ItemDto itemDto, Long id);
@@ -14,4 +15,6 @@ public interface ItemService {
     Collection<ItemDto> searchAvailableItems(String text);
 
     CommentDto addComment(Long itemId, Long userId, CommentDto commentDto);
+
+    Collection<ItemDto> getAllByRequestId(Long id);
 }

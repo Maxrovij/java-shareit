@@ -59,7 +59,7 @@ public class ItemServiceImpl implements ItemService {
                 itemDto.getDescription(),
                 itemDto.getAvailable(),
                 owner.getId(),
-                itemDto.getRequest() != null ? itemDto.getRequest().getId() : null);
+                itemDto.getRequestId() != null ? itemDto.getRequestId() : null);
 
         return toDto(itemRepository.save(item));
     }
@@ -106,6 +106,10 @@ public class ItemServiceImpl implements ItemService {
                 .collect(Collectors.toList());
     }
 
+    public Collection<ItemDto> getAllByRequestId(Long requestId) {
+        List<Item> items = itemRepository.findAllByRequestId(requestId);
+        return items.stream().map(this::toDto).collect(Collectors.toList());
+    }
     public Collection<ItemDto> searchAvailableItems(String text) {
         if (text.equals("")) return List.of();
         String t = text.toLowerCase().trim();
@@ -157,6 +161,7 @@ public class ItemServiceImpl implements ItemService {
                 i.getDescription(),
                 i.isAvailable(),
                 new ItemDto.User(userDto.getId(), userDto.getName()),
+                i.getRequest(),
                 itemRequest,
                 null,
                 null,
