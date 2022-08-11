@@ -50,9 +50,11 @@ public class BookingServiceImpl implements BookingService {
                 endOfBookingRequest.isBefore(startOfBookingRequest) ||
                 startOfBookingRequest.isBefore(now)) throw new IncorrectDataException("Incorrect booking dates!");
 
-        Booking booking = new Booking(bookingRequestDto.getStart(),
-                bookingRequestDto.getEnd(),
-                iDto.getId(), userId,
+        Booking booking = new Booking(
+                startOfBookingRequest,
+                endOfBookingRequest,
+                iDto.getId(),
+                userId,
                 BookingStatus.WAITING);
         return toDto(bookingRepository.save(booking));
     }

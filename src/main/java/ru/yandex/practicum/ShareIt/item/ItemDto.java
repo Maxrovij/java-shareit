@@ -7,10 +7,6 @@ import ru.yandex.practicum.ShareIt.request.ItemRequest;
 
 import java.util.List;
 
-/* TODO
-разделить входящий и исходящий ItemDto
- */
-
 @Data
 @AllArgsConstructor
 public class ItemDto {

@@ -11,7 +11,6 @@ import ru.yandex.practicum.ShareIt.user.UserService;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -47,25 +46,27 @@ public class RequestServiceImpl implements RequestService {
     @Override
     public Collection<ItemRequestDto> getAllForUser(Long userId) {
         UserDto userDto = userService.getById(userId);
-        List<ItemRequest> userRequests = requestRepository.findAllByUserId(userId);
-        return userRequests
+        return requestRepository.findAllByUserId(userId)
                 .stream()
                 .map(itemRequest -> toDto(itemRequest, userDto))
-                .peek(i -> {
-                    Collection<ItemDto> responses = itemService.getAllByRequestId(i.getId());
-                    i.setItems(responses.isEmpty() ? List.of() : responses);
+                .peek(this::setResponses)
+                .sorted((i1, i2) -> {
+                    if (i1.getCreated().isBefore(i2.getCreated())) return 1;
+                    if (i1.getCreated().isAfter(i2.getCreated())) return -1;
+                    return 0;
                 })
-                .sorted(Comparator.comparing(ItemRequestDto::getCreated))
                 .collect(Collectors.toList());
     }
 
     @Override
     public Collection<ItemRequestDto> getAllWithPagination(Long userId, Long from, Integer size) {
         userService.getById(userId);
-        if (from < 0 || size <= 0) throw new IncorrectDataException("Incorrect params!");
+        if (from < 0)
+            throw new IncorrectDataException(String.format("Error! 'from'= %d must be positive or '0' ", from));
+        if (size <= 0)
+            throw new IncorrectDataException(String.format("Error! 'size'= %d. must be greater than '0' ", size));
 
-        List<ItemRequest> requestsByParams = requestRepository.findAllByParams(userId, size, from);
-        return requestsByParams
+        return requestRepository.findAllByParams(userId, size, from)
                 .stream()
                 .map(itemRequest -> {
                     UserDto requestor = userService.getById(itemRequest.getRequestor());
