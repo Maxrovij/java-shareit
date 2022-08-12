@@ -1,8 +1,10 @@
 package ru.yandex.practicum.ShareIt.integrationalTests;
 
 import lombok.RequiredArgsConstructor;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import ru.yandex.practicum.ShareIt.user.User;
@@ -13,13 +15,19 @@ import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 import java.util.Collection;
 import java.util.List;
-
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @SpringBootTest(properties = {"db.name=test"})
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class IntegrationUserServiceTest {
     private final EntityManager em;
     private final UserService userService;
 
+    @AfterAll
+    public void createSomeMoreUsers() {
+        userService.createNew(new UserDto(null, "user4name", "user4@email.ru"));
+        userService.createNew(new UserDto(null, "user5name", "user5@email.ru"));
+        userService.createNew(new UserDto(null, "user6name", "user6@email.ru"));
+    }
     @Test
     public void shouldAddNewUser() {
         UserDto userDto = new UserDto(null, "user1name", "user1@email.ru");
@@ -137,4 +145,6 @@ public class IntegrationUserServiceTest {
 
         Assertions.assertTrue(result4.contains(user22));
     }
+
+
 }
