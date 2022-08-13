@@ -14,4 +14,8 @@ public class CommentDto {
     private Long author;
     private String authorName;
     private LocalDateTime created;
+
+    public CommentDto() {
+
+    }
 }

@@ -21,9 +21,22 @@ public class ItemDto {
     private Booking nextBooking;
     private List<CommentDto> comments;
 
+    public ItemDto() {
+
+    }
+
     @Data
     public static class User {
-        private final Long id;
-        private final String name;
+        private Long id;
+        private String name;
+
+        public User() {
+
+        }
+
+        public User(Long id, String name) {
+            this.id = id;
+            this.name = name;
+        }
     }
 }

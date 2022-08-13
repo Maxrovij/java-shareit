@@ -16,9 +16,14 @@ public class ItemRequestDto {
     private LocalDateTime created;
     private Collection<ItemDto> items;
 
+    public ItemRequestDto() {
+
+    }
     @Data
     static class User {
         private final Long id;
         private final String name;
     }
+
+
 }

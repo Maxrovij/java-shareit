@@ -11,6 +11,11 @@ import ru.yandex.practicum.ShareIt.item.ItemService;
 
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
+
 @SpringBootTest(properties = {"db.name=test"})
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class IntegrationItemServiceTest {
@@ -84,5 +89,73 @@ public class IntegrationItemServiceTest {
         System.out.println("result1 isAvailable: " + result1.isAvailable());
         Assertions.assertFalse(result1.isAvailable());
     }
+
+    @Test
+    public void shouldReturnAllByOwnerId() {
+        ItemDto itemDto4 = itemService.addNew(new ItemDto(
+                null,
+                "iDto Name 4",
+                "iDto Description 4",
+                true,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+        ), 2L);
+        ItemDto itemDto5 = itemService.addNew(new ItemDto(
+                null,
+                "iDto Name 5",
+                "iDto Description 5",
+                true,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+        ), 2L);
+        itemService.addNew(new ItemDto(
+                null,
+                "iDto Name 6",
+                "iDto Description 6",
+                true,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+        ), 4L);
+        itemService.addNew(new ItemDto(
+                null,
+                "iDto Name 7",
+                "iDto Description 7",
+                true,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+        ), 6L);
+
+        Collection<ItemDto> allForUser2 = itemService.getAllByOwnerId(2L);
+        Assertions.assertEquals(3, allForUser2.size());
+
+        TypedQuery<Item> query = em.createQuery("select i from Item i where i.owner = 2", Item.class);
+        List<Item> result = query.getResultList()
+                .stream()
+                .sorted(Comparator.comparing(Item::getId))
+                .collect(Collectors.toList());
+        Assertions.assertEquals("iDto Name 1 Updated", result.get(0).getName());
+        Assertions.assertEquals("iDto Description 1 Updated", result.get(0).getDescription());
+        Assertions.assertEquals(itemDto4.getName(), result.get(1).getName());
+        Assertions.assertEquals(itemDto4.getDescription(), result.get(1).getDescription());
+        Assertions.assertEquals(itemDto5.getName(), result.get(2).getName());
+        Assertions.assertEquals(itemDto5.getDescription(), result.get(2).getDescription());
+    }
+
 
 }

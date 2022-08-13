@@ -1,9 +1,11 @@
 package ru.yandex.practicum.ShareIt.booking;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
 import java.time.LocalDateTime;
 @Data
+@AllArgsConstructor
 public class BookingRequestDto {
     private Long id;
     private LocalDateTime start;
@@ -11,4 +13,8 @@ public class BookingRequestDto {
     private Long itemId;
     private Long bookerId;
     private BookingStatus status;
+
+    public BookingRequestDto() {
+
+    }
 }
