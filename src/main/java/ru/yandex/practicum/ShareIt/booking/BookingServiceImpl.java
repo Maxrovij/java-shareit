@@ -46,9 +46,9 @@ public class BookingServiceImpl implements BookingService {
         LocalDateTime endOfBookingRequest = bookingRequestDto.getEnd();
         log.info("now: {}, requestStart: {}, requestEnd: {}", now, startOfBookingRequest, endOfBookingRequest);
 
-        if (endOfBookingRequest.isBefore(now) ||
-                endOfBookingRequest.isBefore(startOfBookingRequest) ||
-                startOfBookingRequest.isBefore(now)) throw new IncorrectDataException("Incorrect booking dates!");
+        if (endOfBookingRequest.isBefore(now) || endOfBookingRequest.isBefore(startOfBookingRequest) ||
+                startOfBookingRequest.isBefore(now))
+            throw new IncorrectDataException("Incorrect booking dates!");
 
         Booking booking = new Booking(
                 startOfBookingRequest,

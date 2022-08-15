@@ -146,5 +146,4 @@ public class IntegrationUserServiceTest {
         Assertions.assertTrue(result4.contains(user22));
     }
 
-
 }

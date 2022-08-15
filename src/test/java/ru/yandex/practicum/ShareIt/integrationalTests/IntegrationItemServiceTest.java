@@ -156,6 +156,4 @@ public class IntegrationItemServiceTest {
         Assertions.assertEquals(itemDto5.getName(), result.get(2).getName());
         Assertions.assertEquals(itemDto5.getDescription(), result.get(2).getDescription());
     }
-
-
 }
