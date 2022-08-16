@@ -24,8 +24,9 @@ public class BookingJpaTest {
 
     private final BookingRepository bookingRepository;
 
-    @BeforeEach
-    void setUp() {
+    @Test
+    @Order(1)
+    public void shouldReturnAllByBookerId() {
         LocalDateTime now = LocalDateTime.now();
         Booking booking = new Booking();
         booking.setStart(now.plusDays(1));
@@ -51,11 +52,6 @@ public class BookingJpaTest {
         em.merge(booking);
         em.merge(booking1);
         em.merge(booking2);
-    }
-
-    @Test
-    @Order(1)
-    public void shouldReturnAllByBookerId() {
         List<Booking> result = bookingRepository.findAllByBookerId(2L);
 
         TypedQuery<Booking> query = em.getEntityManager().createQuery(
@@ -73,6 +69,31 @@ public class BookingJpaTest {
     @Test
     @Order(2)
     public void shouldReturnAllByBookerIdAndStatus() {
+        LocalDateTime now = LocalDateTime.now();
+        Booking booking = new Booking();
+        booking.setStart(now.plusDays(1));
+        booking.setEnd(now.plusDays(2));
+        booking.setItem(1L);
+        booking.setBookerId(1L);
+        booking.setStatus(BookingStatus.WAITING);
+
+        Booking booking1 = new Booking();
+        booking1.setStart(now.plusDays(3));
+        booking1.setEnd(now.plusDays(4));
+        booking1.setItem(3L);
+        booking1.setBookerId(2L);
+        booking1.setStatus(BookingStatus.APPROVED);
+
+        Booking booking2 = new Booking();
+        booking2.setStart(now.plusDays(5));
+        booking2.setEnd(now.plusDays(6));
+        booking2.setItem(1L);
+        booking2.setBookerId(2L);
+        booking2.setStatus(BookingStatus.REJECTED);
+
+        em.merge(booking);
+        em.merge(booking1);
+        em.merge(booking2);
         List<Booking> result = bookingRepository.findAllByBooker_idAndStatus(
                 2L, String.valueOf(BookingStatus.REJECTED));
 
@@ -89,6 +110,31 @@ public class BookingJpaTest {
     @Test
     @Order(3)
     public void shouldReturnAllByItemId() {
+        LocalDateTime now = LocalDateTime.now();
+        Booking booking = new Booking();
+        booking.setStart(now.plusDays(1));
+        booking.setEnd(now.plusDays(2));
+        booking.setItem(1L);
+        booking.setBookerId(1L);
+        booking.setStatus(BookingStatus.WAITING);
+
+        Booking booking1 = new Booking();
+        booking1.setStart(now.plusDays(3));
+        booking1.setEnd(now.plusDays(4));
+        booking1.setItem(3L);
+        booking1.setBookerId(2L);
+        booking1.setStatus(BookingStatus.APPROVED);
+
+        Booking booking2 = new Booking();
+        booking2.setStart(now.plusDays(5));
+        booking2.setEnd(now.plusDays(6));
+        booking2.setItem(1L);
+        booking2.setBookerId(2L);
+        booking2.setStatus(BookingStatus.REJECTED);
+
+        em.merge(booking);
+        em.merge(booking1);
+        em.merge(booking2);
         List<Booking> result = bookingRepository.findAllByItem_Id(1L);
 
         TypedQuery<Booking> query = em.getEntityManager().createQuery(
@@ -126,6 +172,31 @@ public class BookingJpaTest {
 
         em.merge(item1);
         em.merge(item2);
+        LocalDateTime now = LocalDateTime.now();
+        Booking booking = new Booking();
+        booking.setStart(now.plusDays(1));
+        booking.setEnd(now.plusDays(2));
+        booking.setItem(1L);
+        booking.setBookerId(1L);
+        booking.setStatus(BookingStatus.WAITING);
+
+        Booking booking1 = new Booking();
+        booking1.setStart(now.plusDays(3));
+        booking1.setEnd(now.plusDays(4));
+        booking1.setItem(3L);
+        booking1.setBookerId(2L);
+        booking1.setStatus(BookingStatus.APPROVED);
+
+        Booking booking2 = new Booking();
+        booking2.setStart(now.plusDays(5));
+        booking2.setEnd(now.plusDays(6));
+        booking2.setItem(1L);
+        booking2.setBookerId(2L);
+        booking2.setStatus(BookingStatus.REJECTED);
+
+        em.merge(booking);
+        em.merge(booking1);
+        em.merge(booking2);
         List<Booking> repoResult = bookingRepository.findAllByOwner(3L);
 
         TypedQuery<Booking> query = em.getEntityManager().createQuery(
