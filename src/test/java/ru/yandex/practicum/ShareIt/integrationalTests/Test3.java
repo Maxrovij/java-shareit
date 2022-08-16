@@ -17,7 +17,7 @@ import java.util.List;
 @SpringBootTest(properties = {"db.name=test"})
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class IntegrationRequestServiceTest {
+public class Test3 {
     private final EntityManager em;
     private final RequestService requestService;
 

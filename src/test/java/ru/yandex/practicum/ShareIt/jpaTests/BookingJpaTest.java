@@ -8,6 +8,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import ru.yandex.practicum.ShareIt.booking.Booking;
 import ru.yandex.practicum.ShareIt.booking.BookingRepository;
 import ru.yandex.practicum.ShareIt.booking.BookingStatus;
+import ru.yandex.practicum.ShareIt.item.Item;
 
 import javax.persistence.TypedQuery;
 import java.time.LocalDateTime;
@@ -36,7 +37,7 @@ public class BookingJpaTest {
         Booking booking1 = new Booking();
         booking1.setStart(now.plusDays(3));
         booking1.setEnd(now.plusDays(4));
-        booking1.setItem(2L);
+        booking1.setItem(3L);
         booking1.setBookerId(2L);
         booking1.setStatus(BookingStatus.APPROVED);
 
@@ -65,7 +66,7 @@ public class BookingJpaTest {
                 .collect(Collectors.toList());
 
         Assertions.assertEquals(result.size(), queryResult.size());
-        Assertions.assertEquals(queryResult.get(0).getItem(), 2);
+        Assertions.assertEquals(queryResult.get(0).getItem(), 3);
         Assertions.assertEquals(queryResult.get(1).getItem(), 1);
     }
 
@@ -101,6 +102,42 @@ public class BookingJpaTest {
         Assertions.assertEquals(queryResult.get(0).getItem(), 1);
         Assertions.assertEquals(queryResult.get(1).getItem(), 1);
         Assertions.assertEquals(queryResult.get(0).getStatus(), BookingStatus.WAITING);
+        Assertions.assertEquals(queryResult.get(1).getStatus(), BookingStatus.REJECTED);
+    }
+
+    @Test
+    @Order(4)
+    public void shouldReturnAllForOwner() {
+        Item item1 = new Item(
+                1L,
+                "item1 name",
+                "item1 description",
+                true,
+                3L,
+                null);
+
+        Item item2 = new Item(
+                2L,
+                "item1 name",
+                "item1 description",
+                true,
+                3L,
+                null);
+
+        em.merge(item1);
+        em.merge(item2);
+        List<Booking> repoResult = bookingRepository.findAllByOwner(3L);
+
+        TypedQuery<Booking> query = em.getEntityManager().createQuery(
+                "select b from Booking b join Item i on b.item = i.id where i.owner = 3", Booking.class);
+        List<Booking> queryResult = query.getResultList()
+                .stream()
+                .sorted(Comparator.comparing(Booking::getId))
+                .collect(Collectors.toList());
+        Assertions.assertEquals(repoResult.size(), queryResult.size());
+        Assertions.assertEquals(queryResult.get(0).getItem(), 1);
+        Assertions.assertEquals(queryResult.get(0).getStatus(), BookingStatus.WAITING);
+        Assertions.assertEquals(queryResult.get(1).getItem(), 1);
         Assertions.assertEquals(queryResult.get(1).getStatus(), BookingStatus.REJECTED);
     }
 }

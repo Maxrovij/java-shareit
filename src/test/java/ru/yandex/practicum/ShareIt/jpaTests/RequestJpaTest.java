@@ -8,7 +8,6 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import ru.yandex.practicum.ShareIt.request.ItemRequest;
 import ru.yandex.practicum.ShareIt.request.RequestRepository;
 
-import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import java.time.LocalDateTime;
 import java.util.Comparator;

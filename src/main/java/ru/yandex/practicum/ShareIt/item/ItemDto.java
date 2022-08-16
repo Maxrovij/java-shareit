@@ -1,5 +1,6 @@
 package ru.yandex.practicum.ShareIt.item;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import ru.yandex.practicum.ShareIt.booking.Booking;

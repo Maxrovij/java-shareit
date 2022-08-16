@@ -18,9 +18,10 @@ import java.util.List;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @SpringBootTest(properties = {"db.name=test"})
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
-public class IntegrationUserServiceTest {
+public class Test1 {
     private final EntityManager em;
     private final UserService userService;
+
 
     @AfterAll
     public void createSomeMoreUsers() {
@@ -145,5 +146,7 @@ public class IntegrationUserServiceTest {
 
         Assertions.assertTrue(result4.contains(user22));
     }
+
+
 
 }
