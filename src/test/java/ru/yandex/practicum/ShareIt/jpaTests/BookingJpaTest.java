@@ -10,6 +10,7 @@ import ru.yandex.practicum.ShareIt.booking.BookingRepository;
 import ru.yandex.practicum.ShareIt.booking.BookingStatus;
 import ru.yandex.practicum.ShareIt.item.Item;
 
+import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import java.time.LocalDateTime;
 import java.util.Comparator;
@@ -24,9 +25,8 @@ public class BookingJpaTest {
 
     private final BookingRepository bookingRepository;
 
-    @Test
-    @Order(1)
-    public void shouldReturnAllByBookerId() {
+    @BeforeEach
+    void setUp() {
         LocalDateTime now = LocalDateTime.now();
         Booking booking = new Booking();
         booking.setStart(now.plusDays(1));
@@ -52,6 +52,11 @@ public class BookingJpaTest {
         em.merge(booking);
         em.merge(booking1);
         em.merge(booking2);
+    }
+
+    @Test
+    @Order(1)
+    public void shouldReturnAllByBookerId() {
         List<Booking> result = bookingRepository.findAllByBookerId(2L);
 
         TypedQuery<Booking> query = em.getEntityManager().createQuery(
@@ -69,31 +74,6 @@ public class BookingJpaTest {
     @Test
     @Order(2)
     public void shouldReturnAllByBookerIdAndStatus() {
-        LocalDateTime now = LocalDateTime.now();
-        Booking booking = new Booking();
-        booking.setStart(now.plusDays(1));
-        booking.setEnd(now.plusDays(2));
-        booking.setItem(1L);
-        booking.setBookerId(1L);
-        booking.setStatus(BookingStatus.WAITING);
-
-        Booking booking1 = new Booking();
-        booking1.setStart(now.plusDays(3));
-        booking1.setEnd(now.plusDays(4));
-        booking1.setItem(3L);
-        booking1.setBookerId(2L);
-        booking1.setStatus(BookingStatus.APPROVED);
-
-        Booking booking2 = new Booking();
-        booking2.setStart(now.plusDays(5));
-        booking2.setEnd(now.plusDays(6));
-        booking2.setItem(1L);
-        booking2.setBookerId(2L);
-        booking2.setStatus(BookingStatus.REJECTED);
-
-        em.merge(booking);
-        em.merge(booking1);
-        em.merge(booking2);
         List<Booking> result = bookingRepository.findAllByBooker_idAndStatus(
                 2L, String.valueOf(BookingStatus.REJECTED));
 
@@ -110,31 +90,6 @@ public class BookingJpaTest {
     @Test
     @Order(3)
     public void shouldReturnAllByItemId() {
-        LocalDateTime now = LocalDateTime.now();
-        Booking booking = new Booking();
-        booking.setStart(now.plusDays(1));
-        booking.setEnd(now.plusDays(2));
-        booking.setItem(1L);
-        booking.setBookerId(1L);
-        booking.setStatus(BookingStatus.WAITING);
-
-        Booking booking1 = new Booking();
-        booking1.setStart(now.plusDays(3));
-        booking1.setEnd(now.plusDays(4));
-        booking1.setItem(3L);
-        booking1.setBookerId(2L);
-        booking1.setStatus(BookingStatus.APPROVED);
-
-        Booking booking2 = new Booking();
-        booking2.setStart(now.plusDays(5));
-        booking2.setEnd(now.plusDays(6));
-        booking2.setItem(1L);
-        booking2.setBookerId(2L);
-        booking2.setStatus(BookingStatus.REJECTED);
-
-        em.merge(booking);
-        em.merge(booking1);
-        em.merge(booking2);
         List<Booking> result = bookingRepository.findAllByItem_Id(1L);
 
         TypedQuery<Booking> query = em.getEntityManager().createQuery(
@@ -172,39 +127,11 @@ public class BookingJpaTest {
 
         em.merge(item1);
         em.merge(item2);
-        LocalDateTime now = LocalDateTime.now();
-        Booking booking = new Booking();
-        booking.setStart(now.plusDays(1));
-        booking.setEnd(now.plusDays(2));
-        booking.setItem(1L);
-        booking.setBookerId(1L);
-        booking.setStatus(BookingStatus.WAITING);
-
-        Booking booking1 = new Booking();
-        booking1.setStart(now.plusDays(3));
-        booking1.setEnd(now.plusDays(4));
-        booking1.setItem(3L);
-        booking1.setBookerId(2L);
-        booking1.setStatus(BookingStatus.APPROVED);
-
-        Booking booking2 = new Booking();
-        booking2.setStart(now.plusDays(5));
-        booking2.setEnd(now.plusDays(6));
-        booking2.setItem(1L);
-        booking2.setBookerId(2L);
-        booking2.setStatus(BookingStatus.REJECTED);
-
-        em.merge(booking);
-        em.merge(booking1);
-        em.merge(booking2);
         List<Booking> repoResult = bookingRepository.findAllByOwner(3L);
 
-        TypedQuery<Booking> query = em.getEntityManager().createQuery(
-                "select b from Booking b join Item i on b.item = i.id where i.owner = 3", Booking.class);
-        List<Booking> queryResult = query.getResultList()
-                .stream()
-                .sorted(Comparator.comparing(Booking::getId))
-                .collect(Collectors.toList());
+        Query query = em.getEntityManager().createNativeQuery("select b.ID, b.START_DATE, b.END_DATE, b.ITEM_ID, b.BOOKER_ID,b.STATUS from BOOKING as b " +
+                "JOIN ITEMS I on b.ITEM_ID = I.ID where OWNER_ID = 3", Booking.class);
+        List<Booking> queryResult = query.getResultList();
         Assertions.assertEquals(repoResult.size(), queryResult.size());
         Assertions.assertEquals(queryResult.get(0).getItem(), 1);
         Assertions.assertEquals(queryResult.get(0).getStatus(), BookingStatus.WAITING);
