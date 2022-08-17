@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.ShareIt.GlobalVars;
 
 import java.util.Collection;
 
@@ -21,7 +22,7 @@ public class ItemController {
     @PostMapping
     public ItemDto addNew(
             @RequestBody ItemDto itemDto,
-            @RequestHeader(name = "X-Sharer-User-Id") Long userId) {
+            @RequestHeader(GlobalVars.X_SHARER_USER_ID) Long userId) {
         log.info("Post request. userId: {}, itemDto.name: {}, itemDto.description: {}",
                 userId,
                 itemDto.getName(),
@@ -32,7 +33,7 @@ public class ItemController {
     @PatchMapping("/{itemId}")
     public ItemDto editItem(
             @PathVariable Long itemId,
-            @RequestHeader(name = "X-Sharer-User-Id") Long userId,
+            @RequestHeader(GlobalVars.X_SHARER_USER_ID) Long userId,
             @RequestBody ItemDto itemDto) {
         log.info("Patch request. userId: {}, itemId: {}, itemDto.name: {}, itemDto.description: {}",
                 userId,
@@ -44,13 +45,13 @@ public class ItemController {
 
     @GetMapping("/{itemId}")
     public ItemDto getItemById(@PathVariable Long itemId,
-                               @RequestHeader(value = "X-Sharer-User-Id") Long userId) {
+                               @RequestHeader(GlobalVars.X_SHARER_USER_ID) Long userId) {
         log.info("Get request. userId: {}, itemId: {}", userId, itemId);
         return itemService.getById(itemId, userId);
     }
 
     @GetMapping
-    public Collection<ItemDto> getAllByOwnerId(@RequestHeader(name = "X-Sharer-User-Id") Long userId) {
+    public Collection<ItemDto> getAllByOwnerId(@RequestHeader(GlobalVars.X_SHARER_USER_ID) Long userId) {
         log.info("Get all for owner request. userId: {}", userId);
         return itemService.getAllByOwnerId(userId);
     }
@@ -63,7 +64,7 @@ public class ItemController {
 
     @PostMapping("/{itemId}/comment")
     public CommentDto addComment(@PathVariable Long itemId,
-                                 @RequestHeader("X-Sharer-User-Id") Long userId,
+                                 @RequestHeader(GlobalVars.X_SHARER_USER_ID) Long userId,
                                  @RequestBody CommentDto commentDto) {
         log.info("Post/comment request. userId: {}, itemId: {}, commentText: {}", userId, itemId, commentDto.getText());
         return itemService.addComment(itemId, userId, commentDto);
