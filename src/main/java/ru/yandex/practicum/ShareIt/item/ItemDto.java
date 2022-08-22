@@ -1,5 +1,6 @@
 package ru.yandex.practicum.ShareIt.item;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import ru.yandex.practicum.ShareIt.booking.Booking;
@@ -15,14 +16,28 @@ public class ItemDto {
     private String description;
     private Boolean available;
     private User owner;
+    private Long requestId;
     private ItemRequest request;
     private Booking lastBooking;
     private Booking nextBooking;
     private List<CommentDto> comments;
 
+    public ItemDto() {
+
+    }
+
     @Data
     public static class User {
-        private final Long id;
-        private final String name;
+        private Long id;
+        private String name;
+
+        public User() {
+
+        }
+
+        public User(Long id, String name) {
+            this.id = id;
+            this.name = name;
+        }
     }
 }

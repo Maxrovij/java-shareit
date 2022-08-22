@@ -31,7 +31,7 @@ public class UserService {
 
         User user = new User(userDto.getName(), userDto.getEmail());
         try {
-            return UserMapper.toDto(userRepository.save(user));
+            return toDto(userRepository.save(user));
         } catch (DataIntegrityViolationException e) {
             throw new DataAlreadyExistsException("This email is already used!");
         }
@@ -52,7 +52,7 @@ public class UserService {
             userToEdit.setEmail(userDto.getEmail());
         }
         try {
-            return UserMapper.toDto(userRepository.save(userToEdit));
+            return toDto(userRepository.save(userToEdit));
         } catch (DataIntegrityViolationException e) {
             throw new DataAlreadyExistsException("This email is already used!");
         }
@@ -60,16 +60,20 @@ public class UserService {
 
     public UserDto getById(Long id) {
         Optional<User> maybeUser = userRepository.findById(id);
-        if (maybeUser.isPresent()) return UserMapper.toDto(maybeUser.get());
+        if (maybeUser.isPresent()) return toDto(maybeUser.get());
         throw new DataNotFoundException(String.format("User with id %d not found!", id));
     }
 
     public Collection<UserDto> getAll() {
-        return userRepository.findAll().stream().map(UserMapper::toDto).collect(Collectors.toList());
+        return userRepository.findAll().stream().map(this::toDto).collect(Collectors.toList());
     }
 
     public void delete(Long id) {
         Optional<User> maybeUser = userRepository.findById(id);
         maybeUser.ifPresent(userRepository::delete);
+    }
+
+    private UserDto toDto(User u) {
+        return new UserDto(u.getId(), u.getName(), u.getEmail());
     }
 }
