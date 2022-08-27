@@ -60,6 +60,7 @@ public class BookingController {
 		log.info("Get booking for user with state {}, userId={}, from={}, size={}", stateParam, userId, from, size);
 		return client.getBookings("", userId, state, from, size);
 	}
+
 	@GetMapping("/owner")
 	public ResponseEntity<Object> getBookingsForOwner(
 			@RequestHeader(GlobalVars.USER_HEADER) Long userId,
