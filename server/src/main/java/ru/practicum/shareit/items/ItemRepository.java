@@ -11,6 +11,7 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
     @Modifying
     @Query("update Item i set i.name=?1, i.description=?2, i.available=?3 where i.id=?4")
     void patch(String name, String description, Boolean available, Long id);
+
     @Query(" select i from Item as i " +
             "where lower(i.name) like (concat('%', ?1, '%')) " +
             " or lower(i.description) like (concat('%', ?1, '%'))")
@@ -18,6 +19,7 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
 
     @Query("select i from Item as i where i.owner=?1")
     List<Item> searchAllByOwnerId(Long id);
+
     @Query(value = "select i from Item as i where i.request=?1")
     List<Item> findAllByRequestId(Long id);
 

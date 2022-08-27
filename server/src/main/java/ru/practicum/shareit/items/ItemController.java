@@ -14,6 +14,7 @@ public class ItemController {
     private final ItemService itemService;
 
     private static final Logger log = LoggerFactory.getLogger(ItemController.class);
+
     @Autowired
     public ItemController(ItemService itemService) {
         this.itemService = itemService;

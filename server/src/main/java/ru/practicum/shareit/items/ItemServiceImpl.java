@@ -111,6 +111,7 @@ public class ItemServiceImpl implements ItemService {
         List<Item> items = itemRepository.findAllByRequestId(requestId);
         return items.stream().map(this::toDto).collect(Collectors.toList());
     }
+
     public Collection<ItemDto> searchAvailableItems(String text) {
         if (text.equals("")) return List.of();
         String t = text.toLowerCase().trim();

@@ -30,7 +30,8 @@ public class Item {
     @Column(name = "request_id")
     private Long request;
 
-    public Item(){}
+    public Item() {
+    }
 
     public Item(String name, String description, boolean available, Long owner, Long request) {
         this.name = name;

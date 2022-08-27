@@ -21,6 +21,7 @@ public class ItemRequestDto {
     public ItemRequestDto() {
 
     }
+
     @Data
     static class User {
         private final Long id;
