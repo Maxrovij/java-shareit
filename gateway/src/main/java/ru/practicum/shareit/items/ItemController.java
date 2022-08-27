@@ -69,7 +69,9 @@ public class ItemController {
     @PostMapping("/{itemId}/comment")
     public ResponseEntity<Object> addComment(@Positive @PathVariable Long itemId,
                                              @Positive @RequestHeader(GlobalVars.USER_HEADER) Long userId,
-                                             @Valid @RequestBody CommentDto commentDto) {
+                                             @RequestBody CommentDto commentDto) {
+        if (commentDto.getText() == null || commentDto.getText().isEmpty())
+            throw new IncorrectDataException("Write something!");
         log.info("Adding comment to item with id = {} and comment text: {}", itemId, commentDto.getText());
         return client.addComment(userId, itemId, commentDto);
     }

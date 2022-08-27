@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.bookings.Booking;
 import ru.practicum.shareit.bookings.BookingRepository;
+import ru.practicum.shareit.bookings.BookingStatus;
 import ru.practicum.shareit.exceptions.DataNotFoundException;
 import ru.practicum.shareit.exceptions.IncorrectDataException;
 import ru.practicum.shareit.requests.ItemRequest;
@@ -102,6 +103,7 @@ public class ItemServiceImpl implements ItemService {
                 .stream()
                 .map(this::toDto)
                 .peek(this::setBookings)
+                .sorted(Comparator.comparing(ItemDto::getId))
                 .collect(Collectors.toList());
     }
 
@@ -128,6 +130,11 @@ public class ItemServiceImpl implements ItemService {
         if (itemBookings.size() == 0) throw new DataNotFoundException("Item has never been booked!");
 
         LocalDateTime now = LocalDateTime.now();
+        log.info("ITEMBOOKINGS SZE: " + itemBookings.size());
+        log.info("NOW: " + now);
+        for (Booking b : itemBookings) {
+            log.info("ITEMBOOKINGS get B.end: " + b.getEnd() + "   B.get booker: " + b.getBookerId());
+        }
         if (validateItemBooking(itemBookings, userId, now)) {
             Comment comment = commentRepository.save(new Comment(
                     null,
@@ -137,7 +144,7 @@ public class ItemServiceImpl implements ItemService {
                     now));
             return commentToDto(comment);
         }
-        throw new IncorrectDataException("Not valid comment");
+        throw new IncorrectDataException("You' re not the booker or booking isn't over!");
     }
 
     private ItemDto toDto(Item i) {
@@ -170,7 +177,7 @@ public class ItemServiceImpl implements ItemService {
     private ItemDto setBookings(ItemDto itemDto) {
         List<Booking> allForItem = bookingRepository.findAllByItem_Id(itemDto.getId())
                 .stream()
-                .sorted(Comparator.comparing(Booking::getStart))
+                .sorted((b1, b2) -> b2.getStart().compareTo(b1.getStart()))
                 .collect(Collectors.toList());
         LocalDateTime now = LocalDateTime.now();
         if (!allForItem.isEmpty()) {
@@ -178,8 +185,11 @@ public class ItemServiceImpl implements ItemService {
             Booking next = allForItem.get(allForItem.size() - 1);
             log.info("setBookings(). now: {}, lastBooking.end: {}, nextBooking.start: {}",
                     now, last.getEnd(), next.getStart());
-            itemDto.setLastBooking(last);
-            itemDto.setNextBooking(next);
+            if (last.getStatus() != BookingStatus.REJECTED && last.getStatus() != BookingStatus.CANCELED)
+                itemDto.setLastBooking(last);
+
+            if (next.getStatus() != BookingStatus.REJECTED && next.getStatus() != BookingStatus.CANCELED)
+                itemDto.setNextBooking(next);
         }
         return itemDto;
     }
