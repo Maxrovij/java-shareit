@@ -47,16 +47,20 @@ public class BookingController {
     @GetMapping
     public Collection<BookingDto> getAllForUser(
             @RequestHeader(GlobalVars.USER_HEADER) Long userId,
-            @RequestParam(name = "state", defaultValue = "ALL", required = false) String state) {
+            @RequestParam(name = "state", defaultValue = "ALL", required = false) String state,
+            @RequestParam(name = "from", defaultValue = "0") Integer from,
+            @RequestParam(name = "size", defaultValue = "10") Integer size) {
         log.info("Get запрос. ID пользователя: {}, state: {}", userId, state);
-        return bookingService.getAllForUser(userId, state);
+        return bookingService.getAllForUser(userId, state, size, from);
     }
 
     @GetMapping("/owner")
     public Collection<BookingDto> getAllForOwner(
             @RequestHeader(GlobalVars.USER_HEADER) Long userId,
-            @RequestParam(value = "state", defaultValue = "ALL", required = false) String state) {
+            @RequestParam(value = "state", defaultValue = "ALL", required = false) String state,
+            @RequestParam(name = "from", defaultValue = "0") Integer from,
+            @RequestParam(name = "size", defaultValue = "10") Integer size) {
         log.info("Get/owner запрос. ID пользователя: {}, state: {}", userId, state);
-        return bookingService.getAllForOwner(userId,state);
+        return bookingService.getAllForOwner(userId, state, size, from);
     }
 }

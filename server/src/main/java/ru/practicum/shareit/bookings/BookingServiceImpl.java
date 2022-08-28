@@ -88,7 +88,7 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public Collection<BookingDto> getAllForUser(Long userId, String state) {
+    public Collection<BookingDto> getAllForUser(Long userId, String state, Integer size, Integer from) {
         States s;
         try {
             s = States.valueOf(States.class, state);
@@ -102,7 +102,7 @@ public class BookingServiceImpl implements BookingService {
 
         switch (s) {
             case ALL:
-                bookings = bookingRepository.findAllByBookerId(userId);
+                bookings = bookingRepository.findAllByBookerId(userId, size, from);
                 return toCollectionDto(bookings);
             case REJECTED:
                 bookings = bookingRepository.findAllByBooker_idAndStatus(userId, String.valueOf(BookingStatus.REJECTED));
@@ -111,20 +111,20 @@ public class BookingServiceImpl implements BookingService {
                 bookings = bookingRepository.findAllByBooker_idAndStatus(userId, String.valueOf(BookingStatus.WAITING));
                 return toCollectionDto(bookings);
             case CURRENT:
-                bookings = bookingRepository.findAllByBookerId(userId);
+                bookings = bookingRepository.findAllByBookerId(userId, size, from);
                 log.info("getAllForUser(), 'CURRENT' state. now = {}", now);
                 return toCollectionDto(bookings
                         .stream()
                         .filter(booking -> booking.getStart().isBefore(now) && booking.getEnd().isAfter(now))
                         .collect(Collectors.toList()));
             case PAST:
-                bookings = bookingRepository.findAllByBookerId(userId);
+                bookings = bookingRepository.findAllByBookerId(userId, size, from);
                 return toCollectionDto(bookings
                         .stream()
                         .filter(booking -> booking.getEnd().isBefore(now))
                         .collect(Collectors.toList()));
             case FUTURE:
-                bookings = bookingRepository.findAllByBookerId(userId);
+                bookings = bookingRepository.findAllByBookerId(userId, size, from);
                 return toCollectionDto(bookings
                         .stream()
                         .filter(booking -> booking.getStart().isAfter(now))
@@ -135,13 +135,13 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public Collection<BookingDto> getAllForOwner(Long userId, String state) {
+    public Collection<BookingDto> getAllForOwner(Long userId, String state, Integer size, Integer from) {
 
         Collection<ItemDto> allItems = itemService.getAllByOwnerId(userId);
         if (allItems.size() == 0) throw new DataNotFoundException("You don't have any items!");
 
         LocalDateTime now = LocalDateTime.now();
-        List<Booking> allByOwner = bookingRepository.findAllByOwner(userId);
+        List<Booking> allByOwner = bookingRepository.findAllByOwner(userId, size, from);
 
         switch (States.valueOf(States.class, state)) {
             case ALL:

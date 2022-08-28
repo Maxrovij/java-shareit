@@ -9,7 +9,7 @@ public interface BookingService {
 
     BookingDto get(Long userId, Long bookingId);
 
-    Collection<BookingDto> getAllForUser(Long userId, String state);
+    Collection<BookingDto> getAllForUser(Long userId, String state, Integer size, Integer from);
 
-    Collection<BookingDto> getAllForOwner(Long userId, String state);
+    Collection<BookingDto> getAllForOwner(Long userId, String state, Integer size, Integer from);
 }
