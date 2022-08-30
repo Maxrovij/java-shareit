@@ -9,6 +9,7 @@ import org.springframework.web.util.DefaultUriBuilderFactory;
 import ru.practicum.shareit.booking.dto.BookItemRequestDto;
 import ru.practicum.shareit.booking.dto.BookingState;
 import ru.practicum.shareit.client.BaseClient;
+import ru.practicum.shareit.exceptions.IncorrectDataException;
 
 import java.util.Map;
 
@@ -38,7 +39,10 @@ public class BookingClient extends BaseClient {
         return get("/" + bookingId, userId);
     }
 
-    public ResponseEntity<Object> getBookings(String path, Long userId, BookingState state, Integer from, Integer size) {
+    public ResponseEntity<Object> getBookings(String path, Long userId, String stateParam, Integer from, Integer size) {
+        BookingState state = BookingState.from(stateParam)
+                .orElseThrow(() -> new IncorrectDataException(String.format("{\"error\": \"Unknown state: %s\" }",
+                        stateParam)));
         Map<String, Object> parameters = Map.of(
                 "state", state.name(),
                 "from", from,

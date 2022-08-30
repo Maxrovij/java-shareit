@@ -51,14 +51,8 @@ public class BookingController {
 			@RequestParam(name = "state", defaultValue = "all") String stateParam,
 			@PositiveOrZero @RequestParam(name = "from", defaultValue = "0") Integer from,
 			@Positive @RequestParam(name = "size", defaultValue = "10") Integer size) {
-
-		BookingState state = BookingState.from(stateParam)
-				.orElseThrow(() ->
-						new IncorrectDataException(String.format("{\"error\": \"Unknown state: %s\" }",
-								stateParam)));
-
 		log.info("Get booking for user with state {}, userId={}, from={}, size={}", stateParam, userId, from, size);
-		return client.getBookings("", userId, state, from, size);
+		return client.getBookings("", userId, stateParam, from, size);
 	}
 
 	@GetMapping("/owner")
@@ -68,10 +62,7 @@ public class BookingController {
 			@PositiveOrZero @RequestParam(name = "from", defaultValue = "0") Integer from,
 			@Positive @RequestParam(name = "size", defaultValue = "10") Integer size
 	) {
-		BookingState state = BookingState.from(stateParam)
-				.orElseThrow(() -> new IncorrectDataException(String.format("{\"error\": \"Unknown state: %s\" }",
-						stateParam)));
 		log.info("Getting bookings for owner with id {} and state {}", userId, stateParam);
-		return client.getBookings("/owner", userId, state, from, size);
+		return client.getBookings("/owner", userId, stateParam, from, size);
 	}
 }
