@@ -9,8 +9,6 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.GlobalVars;
 import ru.practicum.shareit.booking.dto.BookItemRequestDto;
-import ru.practicum.shareit.booking.dto.BookingState;
-import ru.practicum.shareit.exceptions.IncorrectDataException;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Positive;
